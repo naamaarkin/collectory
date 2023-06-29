@@ -371,6 +371,9 @@ class CrudService {
                 if (p.defaultDarwinCoreValues) {
                     defaultDarwinCoreValues = p.defaultDarwinCoreValues.formatJSON()
                 }
+                if (p.rootEventCoreValues) {
+                    rootEventCoreValues = p.rootEventCoreValues.formatJSON()
+                }
                 hasMappedCollections = p.hasMappedCollections()
                 status = p.status
                 provenance = p.provenance

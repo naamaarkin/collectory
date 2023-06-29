@@ -254,7 +254,7 @@
 
                 <cl:showConnectionParameters connectionParameters="${instance.connectionParameters}"/></p>
 
-                <g:if test="${instance.resourceType == 'records'}">
+                <g:if test="${instance.resourceType == 'records' || instance.resourceType == 'events'}">
                     <!-- darwin core defaults -->
                     <g:set var="dwc" value="${instance.defaultDarwinCoreValues ? JSON.parse(instance.defaultDarwinCoreValues) : [:]}"/>
                     <h3>Default values for DwC fields</h3>
@@ -266,6 +266,19 @@
                         </table>
 
                 </g:if>
+
+                <g:if test="${instance.resourceType == 'events'}">
+                    <!-- darwin core defaults -->
+                    <g:set var="rootEventCore" value="${instance.rootEventCoreValues ? JSON.parse(instance.rootEventCoreValues) : [:]}"/>
+                    <h3>Root event core values</h3>
+                    <g:if test="${!dwc}">none</g:if>
+                    <table class="table">
+                        <tr><td>Event ID:</td><td>${rootEventCore.eventID?:'Not supplied'}</td></tr>
+                        <tr><td>Event Type:</td><td>${rootEventCore.eventType?:'Not supplied'}</td></tr>
+                        <tr><td>Event name:</td><td>${rootEventCore.eventName?:'Not supplied'}</td></tr>
+                    </table>
+                </g:if>
+
                 <cl:editButton uid="${instance.uid}" page="/dataResource/contribution"
                                notAuthorisedMessage="You are not authorised to edit this resource."/>
               </div>

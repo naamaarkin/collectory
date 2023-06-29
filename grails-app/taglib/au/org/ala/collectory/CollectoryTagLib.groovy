@@ -1814,6 +1814,7 @@ class CollectoryTagLib {
         // see if we have a protocol
         def cp = null
         def protocol = 'none'
+        def entity = attrs.bean
         if (attrs.connectionParameters.toString()) {
             cp = JSON.parse(attrs.connectionParameters.toString())
             protocol = cp.protocol
@@ -1895,9 +1896,27 @@ class CollectoryTagLib {
                     out << "${widget}"(attributes)
                     out << "</div>"
                 }
+
+//                if (true){
+//                    out << """<div class="form-group labile" id="${it.name}" style="${hidden}">"""
+//
+//                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
+//                    out << """<label for="rootEventID">${pp.rootEventID}${helpText(code:'dataResource.rootEventID')}</label>"""
+//                    out << textField(['name': 'rootEventID'])
+//                    out << "</div>"
+//
+//                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
+//                    out << """<label for="rootEventName">${pp.rootEventName}${helpText(code:'dataResource.rootEventName')}</label>"""
+//                    out << textField(['name': 'rootEventName'])
+//                    out << "</div>"
+//
+//                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
+//                    out << """<label for="rootEventType">${pp.rootEventType}${helpText(code:'dataResource.rootEventType')}</label>"""
+//                    out << textField(['name': 'rootEventType'])
+//                    out << "</div>"
+//                }
             }
         }
-
     }
 
     def lastChecked = { attrs ->

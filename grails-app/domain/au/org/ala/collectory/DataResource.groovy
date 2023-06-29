@@ -25,6 +25,7 @@ class DataResource implements ProviderGroup, Serializable {
         rights type:'text'
         citation type:'text'
         defaultDarwinCoreValues type:'text'
+        rootEventCoreValues type:'text'
         connectionParameters type:'text'
         imageMetadata type:'text'
         harvestingNotes type:'text'
@@ -72,6 +73,7 @@ class DataResource implements ProviderGroup, Serializable {
     String connectionParameters     // json string containing parameters based on a connection profile - DIGiR, TAPIR, etc
     String imageMetadata            // json string containing default dublin core values for any images associated with this resource
     String defaultDarwinCoreValues  // json string containing default values to use for missing DwC fields
+    String rootEventCoreValues      // json string containing root event values to use a top level event for this data resource
     int downloadLimit = 0           // max number of records that can be included in a single download - 0 = no limit
     String contentTypes             // json array of type of content provided by the resource
     boolean publicArchiveAvailable = false  // true if a DwC archive is allowed to be downloaded

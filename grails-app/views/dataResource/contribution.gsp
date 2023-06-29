@@ -91,7 +91,27 @@
                 <cl:connectionParameters bean="command" connectionParameters="${command.connectionParameters}"/>
             </div>
 
-            <g:if test="${command.resourceType == 'records'}">
+            <g:if test="${command.resourceType == 'events'}">
+                <div style="margin-bottom: 20px; border-bottom: 1px solid #E6E6E6;">
+                <div><h3><g:message code="dataResource.root.event" default="Top level event properties" /></h3></div>
+                <div><g:message code="dataResource.root.event.help" default="Add a top level event to this dataset that all events without a parentEventID will point to if parentEventID is not supplied" /></div>
+                <g:set var="rootEvent" value="${command.rootEventCoreValues ? JSON.parse(command.rootEventCoreValues) : [:]}"/>
+                <div class="form-group">
+                    <label for="rootEvent.eventID"><g:message code="dataResource.root.eventID.label" default="Root eventID" /> <cl:helpText code="dataResource.root.eventID"/></label>
+                    <g:textField name="rootEvent.eventID" class="form-control" value="${rootEvent['eventID']}"/>
+                </div>
+                <div class="form-group">
+                    <label for="rootEvent.eventType"><g:message code="dataResource.root.eventType.label" default="Root eventType" /> <cl:helpText code="dataResource.root.eventType"/></label>
+                    <g:textField name="rootEvent.eventType" class="form-control" value="${rootEvent['eventType']}"/>
+                </div>
+                <div class="form-group">
+                    <label for="rootEvent.eventName"><g:message code="dataResource.root.eventName.label" default="Root eventName" /> <cl:helpText code="dataResource.root.eventName"/></label>
+                    <g:textField name="rootEvent.eventName" class="form-control" value="${rootEvent['eventName']}"/>
+                </div>
+                </div>
+            </g:if>
+
+            <g:if test="${command.resourceType == 'records' || command.resourceType == 'events'}">
                 <!-- darwin core defaults -->
                 <div><h3><g:message code="dataresource.contribution.table0201" /></h3></div>
                 <div><g:message code="dataresource.contribution.table0301" />.</div>

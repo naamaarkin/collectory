@@ -432,4 +432,13 @@ liquibase.command.referencePassword: XXXXX
         </sql>
     </changeSet>
 
+    <changeSet author="djftmartin" id="20230622-00">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="data_resource" />
+        </preConditions>
+        <addColumn tableName="data_resource" >
+            <column name="root_event_core_values" type="TEXT" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

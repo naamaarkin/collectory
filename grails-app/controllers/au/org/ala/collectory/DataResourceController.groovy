@@ -154,6 +154,15 @@ class DataResourceController extends ProviderGroupController {
         }
         params.connectionParameters = (cp as JSON).toString()
 
+        if (pg.resourceType == 'events') {
+            def map = [
+                    'eventID'  : params['rootEvent.eventID'] ?: '',
+                    'eventType': params['rootEvent.eventType'] ?: '',
+                    'eventName': params['rootEvent.eventName'] ?: '',
+            ]
+            params.rootEventCoreValues = (map as JSON).toString()
+        }
+
         // process dates
         def lastChecked = params.remove('lastChecked')
         if (lastChecked) {
