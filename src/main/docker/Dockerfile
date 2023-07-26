@@ -1,9 +1,14 @@
 FROM livingatlases/java-11-base:1.0.0
 
-# Default values
-ARG WAR_FILE=./build/libs/collectory-*.war
+# Lint with:
+# docker run --rm -i hadolint/hadolint < Dockerfile
+# Test with:
+# container-structure-test test --driver tar --image livingatlases/java-11-base:1.0.0 --config container-test.yaml
+
+# Args
 ARG APP_ARTIFACT=collectory
 ARG USER=collectory
+ARG WAR_FILE=./build/libs/collectory-*.war
 
 # Env variables
 ENV WAR_FILE_ENV=${WAR_FILE}
@@ -19,7 +24,9 @@ WORKDIR /opt/atlas/$APP_ARTIFACT
 
 # war
 COPY $WAR_FILE_ENV app.war
+RUN chown -R $USER:$USER /opt/atlas/$APP_ARTIFACT
 
+USER $USER
 EXPOSE $SERVER_PORT
 # Lint with:
 # docker run --rm -i hadolint/hadolint < Dockerfile
