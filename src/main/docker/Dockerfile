@@ -1,4 +1,4 @@
-FROM livingatlases/java-11-base:latest
+FROM livingatlases/java-11-base:1.0.0
 
 # Default values
 ARG WAR_FILE=./build/libs/collectory-*.war
