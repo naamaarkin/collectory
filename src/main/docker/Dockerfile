@@ -7,7 +7,8 @@ FROM livingatlases/java-11-base:1.0.0
 ARG APP_ARTIFACT=collectory
 ARG USER=collectory
 ARG WAR_FILE=./build/libs/collectory-*.war
-ARG DOCKERIZE_ARGS="-wait tcp://living-atlas-collectory-mysql:3306 -timeout 120s"
+ENV MYSQL_HOST=collectory-mysql
+ARG DOCKERIZE_ARGS="-wait tcp://$MYSQL_HOST:3306 -timeout 120s"
 
 # Env variables
 ENV SERVER_PORT="8080"
