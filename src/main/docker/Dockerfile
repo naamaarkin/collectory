@@ -7,14 +7,12 @@ FROM livingatlases/java-11-base:1.0.0
 ARG APP_ARTIFACT=collectory
 ARG USER=collectory
 ARG WAR_FILE=./build/libs/collectory-*.war
-ENV MYSQL_HOST=collectory-mysql
-ARG DOCKERIZE_ARGS="-wait tcp://$MYSQL_HOST:3306 -timeout 120s"
 
 # Env variables
 ENV SERVER_PORT="8080"
 ENV WAR_FILE_ENV=${WAR_FILE}
 ENV JAVA_OPTS="-Djava.awt.headless=true -Xmx256m -Xms256m -XX:+UseConcMarkSweepGC -Dlog4j2.formatMsgNoLookups=true"
-ENV DOCKERIZE_OPTS=${DOCKERIZE_ARGS}
+ENV DOCKERIZE_OPTS="-wait tcp://la_collectory_mysql:3306 -timeout 120s"
 
 # Directories and perms
 RUN mkdir -p /data/$APP_ARTIFACT && \
