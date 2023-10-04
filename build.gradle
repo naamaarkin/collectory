@@ -107,7 +107,7 @@ dependencies {
     // See: https://github.com/AtlasOfLivingAustralia/collectory/issues/84#issuecomment-1070670979
     // before updating mysql-connector-java
     implementation "mysql:mysql-connector-java:8.0.22"
-    implementation "org.grails.plugins:ala-bootstrap3:4.1.0"
+    implementation "org.grails.plugins:ala-bootstrap3:4.3.0"
     implementation "au.org.ala.plugins.grails:ala-charts-plugin:2.3.0"
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
