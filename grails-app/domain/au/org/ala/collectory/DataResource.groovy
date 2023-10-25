@@ -101,6 +101,8 @@ class DataResource implements ProviderGroup, Serializable {
 
     String gbifDoi
 
+    String createdByID
+
     static constraints = {
         guid(nullable:true, maxSize:256)
         uid(blank:false, maxSize:20)
@@ -168,6 +170,7 @@ class DataResource implements ProviderGroup, Serializable {
         dataCollectionProtocolDoc(nullable:true)
         suitableFor(nullable:true)
         suitableForOtherDetail(nullable:true)
+        createdByID(nullable:true)
     }
 
     static transients =  ['creativeCommons']
