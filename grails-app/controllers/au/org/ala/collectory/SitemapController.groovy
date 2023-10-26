@@ -14,6 +14,8 @@ class SitemapController {
             return
         }
 
+        response.contentType = "application/xml"
+
         if (idx == null) {
             // return sitemap index
             response.outputStream << index.newInputStream()
