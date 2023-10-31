@@ -1,5 +1,5 @@
 # Use an official Maven runtime as a parent image
-FROM gradle:latest as builder
+FROM gradle:7.6.3-jdk11 as builder
 
 # Set the working directory in the container
 WORKDIR /app
@@ -7,7 +7,6 @@ WORKDIR /app
 # Copy the Gradle build files and settings to the container
 COPY build.gradle .
 COPY gradle.properties .
-COPY gradlew .
 
 # Copy the source code of the Grails application to the container
 COPY src/ src/
@@ -16,7 +15,7 @@ COPY grails-app/ grails-app/
 COPY db/ db/
 
 # Build the Grails application using Gradle
-RUN ./gradlew assemble
+RUN gradle assemble
 
 FROM livingatlases/java-11-base:1.0.0
 
