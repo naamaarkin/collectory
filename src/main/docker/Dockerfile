@@ -6,14 +6,17 @@ WORKDIR /app
 
 # Copy the Gradle build files and settings to the container
 COPY build.gradle .
-COPY settings.gradle .
 COPY gradle.properties .
+COPY gradlew .
 
 # Copy the source code of the Grails application to the container
 COPY src/ src/
+COPY gradle/ gradle/
+COPY grails-app/ grails-app/
+COPY db/ db/
 
 # Build the Grails application using Gradle
-RUN gradle assemble
+RUN ./gradlew assemble
 
 FROM livingatlases/java-11-base:1.0.0
 
@@ -23,7 +26,7 @@ FROM livingatlases/java-11-base:1.0.0
 # Args
 ARG APP_ARTIFACT=collectory
 ARG USER=collectory
-ARG WAR_FILE=./build/libs/collectory-*.war
+ARG WAR_FILE=/app/build/libs/collectory-*.war
 ENV MYSQL_HOST=collectory-mysql
 ARG DOCKERIZE_ARGS="-wait tcp://$MYSQL_HOST:3306 -timeout 120s"
 
@@ -40,7 +43,7 @@ RUN mkdir -p /data/$APP_ARTIFACT && \
 WORKDIR /opt/atlas/$APP_ARTIFACT
 
 # war
-COPY $WAR_FILE_ENV app.war
+COPY --from=builder $WAR_FILE_ENV /opt/atlas/$APP_ARTIFACT/app.jar
 RUN chown -R $USER:$USER /opt/atlas/$APP_ARTIFACT
 
 USER $USER
