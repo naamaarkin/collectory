@@ -5,6 +5,7 @@ FROM gradle:7.6.3-jdk11 as builder
 WORKDIR /app
 
 # Copy the Gradle build files and settings to the container
+COPY .git .
 COPY build.gradle .
 COPY gradle.properties .
 
