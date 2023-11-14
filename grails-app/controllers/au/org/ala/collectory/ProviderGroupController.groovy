@@ -906,7 +906,7 @@ abstract class ProviderGroupController {
         if (isAdmin()) {
             return true
         } else {
-            def email = RequestContextHolder.currentRequestAttributes()?.getUserPrincipal()?.name
+            def email = collectoryAuthService.authService.email
             ProviderGroup pg = providerGroupService?._get(uid)
             if (email && pg) {
                 if(pg){
