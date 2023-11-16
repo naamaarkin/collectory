@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 
 class CollectoryTagLib {
 
-    def collectoryAuthService, metadataService, providerGroupService
+    def collectoryAuthService, metadataService, providerGroupService, authService
 
     static namespace = 'cl'
 
@@ -196,7 +196,7 @@ class CollectoryTagLib {
      * @attrs uid - the uid of the entity
      */
     def isAuth = { attrs, body ->
-            if (isAuthorisedToEdit(attrs.uid, request.getRemoteUser())) {
+            if (isAuthorisedToEdit(attrs.uid, authService.email)) {
             out << body()
         } else {
             out << ' You are not authorised to change this record '// + debugString
@@ -1536,7 +1536,7 @@ class CollectoryTagLib {
      * @body the label for the button - defaults to 'Edit' if not specified
      */
     def editButton = { attrs, body ->
-        if (isAuthorisedToEdit(attrs.uid, request.getRemoteUser())) {
+        if (isAuthorisedToEdit(attrs.uid, authService.email)) {
             def paramsMap
             // anchor class
             paramsMap = [class:'edit btn btn-default']
