@@ -300,6 +300,15 @@ class LookupController {
             tags = "citations",
             operationId = "getCitations",
             summary = "Get citations for a list of data resource UIDs.",
+            parameters = [
+                    @Parameter(
+                            name = "Accept",
+                            in = HEADER,
+                            schema = @Schema(implementation = String),
+                            example = "application/json or text/csv or text/plain",
+                            required = false
+                    )
+            ],
             requestBody = @RequestBody(
                     required = true,
                     description = "A JSON array containing dataResource UIDs.",
@@ -361,7 +370,6 @@ class LookupController {
             security = []
     )
     @Path("/ws/citations")
-    @Produces("application/json")
     def citations() {
         if (params.include) {
             params.uids = "[${params.include}]"
