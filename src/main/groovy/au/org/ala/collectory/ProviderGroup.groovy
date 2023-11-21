@@ -100,9 +100,6 @@ trait ProviderGroup implements Serializable {
         ContactFor.withTransaction {
             cf.save(flush: true)
         }
-        if (cf.hasErrors()) {
-            cf.errors.each {println it.toString()}
-        }
         cf
     }
 
@@ -479,14 +476,6 @@ trait ProviderGroup implements Serializable {
         pgs.taxonomyCoverageHints = JSONHelper.taxonomyHints(taxonomyHints)
         return pgs
     }
-
-
-
-    /**
-     * Returns a summary object that extends ProviderGroupSummary and is specific to the type of entity.
-     * @return summary object
-     */
-    abstract ProviderGroupSummary buildSummary()
 
     /**
      * Returns a list of UIDs of data providers and data resources that contribute records to the entity.

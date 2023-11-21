@@ -22,8 +22,6 @@ class DataLinkController {
     }
 
     def create = {
-        println "consumer = ${params.consumer}"
-        println "provider = ${params.provider}"
         def dataLinkInstance = new DataLink()
         dataLinkInstance.properties = params
         return [dataLinkInstance: dataLinkInstance, returnTo: params.returnTo]
@@ -68,7 +66,7 @@ class DataLinkController {
             if (params.version) {
                 def version = params.version.toLong()
                 if (dataLinkInstance.version > version) {
-                    
+
                     dataLinkInstance.errors.rejectValue("version", "default.optimistic.locking.failure", [message(code: 'dataLink.label', default: 'DataLink')] as Object[], "Another user has updated this DataLink while you were editing")
                     render(view: "edit", model: [dataLinkInstance: dataLinkInstance, returnTo: params.returnTo])
                     return

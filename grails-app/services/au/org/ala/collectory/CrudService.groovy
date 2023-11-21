@@ -17,6 +17,7 @@ class CrudService {
     def grailsApplication
     def idGeneratorService
     def providerGroupService
+    def dataHubService
 
     static baseStringProperties = ['guid','name','acronym','phone','email','state','pubShortDescription',
                                    'pubDescription','techDescription','notes', 'isALAPartner','focus','attributions',
@@ -157,7 +158,7 @@ class CrudService {
         }
         return dp
     }
-    
+
     def updateDataProvider(dp, obj) {
         updateBaseProperties(dp, obj)
         updateDataProviderProperties(dp, obj)
@@ -327,7 +328,7 @@ class CrudService {
             }
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
-                hubMembership = p.listHubMembership()?.formatHubMembership()
+                hubMembership = dataHubService.listDataHubs()?.findAll {it.isDataResourceMember(p.uid)}?.formatHubMembership()
                 taxonomyCoverageHints = JSONHelper.taxonomyHints(p.taxonomyHints)
                 attributions = p.attributionList.formatAttributions()
                 dateCreated = p.dateCreated
@@ -355,9 +356,9 @@ class CrudService {
                     riskAssessment = p.riskAssessment
                 }
                 contentTypes = p.contentTypes ? p.contentTypes.formatJSON() : []
-                if (p.listConsumers()) {
-                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
-                }
+//                if (p.listConsumers()) {
+//                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
+//                }
                 if (p.connectionParameters) {
                     def connParams =  p.connectionParameters.formatJSON()
                     if (!apiKey){
@@ -371,7 +372,7 @@ class CrudService {
                 if (p.defaultDarwinCoreValues) {
                     defaultDarwinCoreValues = p.defaultDarwinCoreValues.formatJSON()
                 }
-                hasMappedCollections = p.hasMappedCollections()
+//                hasMappedCollections = p.hasMappedCollections()
                 status = p.status
                 provenance = p.provenance
                 harvestFrequency = p.harvestFrequency
@@ -386,9 +387,9 @@ class CrudService {
                 isShareableWithGBIF = p.isShareableWithGBIF
                 verified = p.isVerified()
                 gbifRegistryKey = p.gbifRegistryKey
-                if (p.externalIdentifiers) {
-                    externalIdentifiers = p.externalIdentifiers.formatExternalIdentifiers()
-                }
+//                if (p.externalIdentifiers) {
+//                    externalIdentifiers = p.externalIdentifiers.formatExternalIdentifiers()
+//                }
                 doi = p.gbifDoi
             }
         }
@@ -571,7 +572,7 @@ class CrudService {
             }
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
-                hubMembership = p.listHubMembership()?.formatHubMembership()
+                hubMembership = dataHubService.listDataHubs()?.findAll {it.isInstitutionMember(p.uid)}?.formatHubMembership()
                 attributions = p.attributionList.formatAttributions()
                 dateCreated = p.dateCreated
                 lastUpdated = p.lastUpdated
@@ -662,7 +663,7 @@ class CrudService {
             }
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
-                hubMembership = p.listHubMembership()?.formatHubMembership()
+                hubMembership = dataHubService.listDataHubs()?.findAll {it.isCollectionMember(p.uid)}?.formatHubMembership()
                 taxonomyCoverageHints = JSONHelper.taxonomyHints(p.taxonomyHints)
                 attributions = p.attributionList.formatAttributions()
 
@@ -905,7 +906,6 @@ class CrudService {
         }
         // null objects are copies of JSONObject.NULL - set them to Java null
         [baseStringProperties,dataResourceStringProperties].flatten().each {
-            //println "checking base string property ${it} " + obj.has(it) ? "exists - " + obj."${it}" : "absent"
             if (obj.has(it) && obj."${it}".toString() == 'null') {
                 obj."${it}" = null
             }
@@ -989,7 +989,6 @@ class OutputFormat {
     static def formatAttributions(List list) {
         def result = []
         list.each {
-            //println "attribution ${it.name} - ${it.url}"
             // lookup attribution
             result << [name: it.name, url: it.url]
         }

@@ -65,37 +65,6 @@ class Institution implements ProviderGroup, Serializable {
     }
 
     /**
-     * Returns a summary of the institution including:
-     * - id
-     * - name
-     * - acronym
-     * - lsid if available
-     * - description
-     *
-     * @return InstitutionSummary
-     * @.history 2-8-2010 removed inst codes as these are now related only to collections (can be added back with a different mechanism if required)
-     */
-    InstitutionSummary buildSummary() {
-        InstitutionSummary is = init(new InstitutionSummary()) as InstitutionSummary
-        is.institutionId = dbId()
-        is.institutionUid = uid
-        is.institutionName = name
-        is.collections = collections.collect { [it.uid, it.name] }
-        listProviders().each {
-            def pg = Institution.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'dp') {
-                    is.relatedDataProviders << [uid: pg.uid, name: pg.name]
-                } else {
-                    is.relatedDataResources << [uid: pg.uid, name: pg.name]
-                }
-            }
-        }
-        is.hubMembership = listHubMembership().collect { [uid: it.uid, name: it.name] }
-        return is
-    }
-
-    /**
      * Returns true if:
      *  a) has membership of a collection network (hub) (assumed that all hubs are partners)
      *  b) has isALAPartner set
@@ -145,15 +114,6 @@ class Institution implements ProviderGroup, Serializable {
             }
         }
         return result
-    }
-
-    /**
-     * Returns a list of all hubs this collection belongs to.
-     *
-     * @return list of DataHub
-     */
-    List listHubMembership() {
-        DataHub.list().findAll {it.isInstitutionMember(uid)}
     }
 
     /**

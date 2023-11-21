@@ -5,7 +5,7 @@ import grails.converters.JSON
 
 class ReportsController {
 
-    def collectoryAuthService, activityLogService
+    def collectoryAuthService, activityLogService, collectionService, institutionService
 
     def index = {
         redirect action: list, params: params
@@ -86,7 +86,9 @@ class ReportsController {
     }
 
     def codes = {
-        [codeSummaries: (ProviderMap.list().collect { it.collection.buildSummary() }).sort {it.name}]
+        [codeSummaries: (ProviderMap.list().collect {
+            collectionService.buildSummary(it.collection.uid)
+        }).sort {it.name}]
     }
 
     def duplicateContacts = {
@@ -217,13 +219,13 @@ class ReportsController {
     def attributions = {
         def collAttributions = []
         Collection.list([sort: 'name']).each {
-            ProviderGroupSummary pgs = it.buildSummary()
+            ProviderGroupSummary pgs = collectionService.buildSummary(it.uid)
             List<Attribution> attribs = it.getAttributionList()
             def ats = new Attributions(pgs, attribs)
             collAttributions << ats
         }
         def instAttributions = Institution.list([sort: 'name']).collect {
-            ProviderGroupSummary pgs = it.buildSummary()
+            ProviderGroupSummary pgs = institutionService.buildSummary(it.uid)
             List<Attribution> attribs = it.getAttributionList()
             new Attributions(pgs, attribs)
         }
@@ -248,7 +250,7 @@ class ReportsController {
                 }
                 // compare to num digistised
                 if (count == 0 || (count / it.numRecordsDigitised) < 0.7) {
-                    mrs << [collection:it.buildSummary(), biocacheCount: count, claimed: it.numRecordsDigitised]
+                    mrs << [collection: collectionService.buildSummary(it.uid), biocacheCount: count, claimed: it.numRecordsDigitised]
                 }
             }
         }

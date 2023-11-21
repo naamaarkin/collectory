@@ -255,10 +255,12 @@ class CollectoryAuthService{
         Boolean authorised = false
         if(grailsApplication.config.security.apikey.checkEnabled.toBoolean() || grailsApplication.config.security.apikey.enabled.toBoolean()){
             def apiKey = getApiKey(params, request)
-            Call<CheckApiKeyResult> checkApiKeyCall = apiKeyClient.checkApiKey(apiKey)
-            final Response<CheckApiKeyResult> checkApiKeyResponse = checkApiKeyCall.execute()
-            CheckApiKeyResult apiKeyCheck = checkApiKeyResponse.body();
-            authorised = apiKeyCheck.isValid()
+            if (apiKey) {
+                Call<CheckApiKeyResult> checkApiKeyCall = apiKeyClient.checkApiKey(apiKey)
+                final Response<CheckApiKeyResult> checkApiKeyResponse = checkApiKeyCall.execute()
+                CheckApiKeyResult apiKeyCheck = checkApiKeyResponse.body();
+                authorised = apiKeyCheck.isValid()
+            }
         }
 
         if(!authorised){

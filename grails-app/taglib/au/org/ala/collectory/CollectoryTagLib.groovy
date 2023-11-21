@@ -686,7 +686,7 @@ class CollectoryTagLib {
         if (!email)
             email = body().toString()
         int index = email.indexOf('@')
-        //println "index=${index}"
+
         if (index > 0) {
             email = email.replaceAll("@", strEncodedAtSign)
         }
@@ -1084,8 +1084,6 @@ class CollectoryTagLib {
      * Draw elements for taxa breakdown chart
      */
     def taxonChart = { attrs ->
-        //println "taxonChart records link"
-        //println buildRecordsUrl(attrs.uid)
         out <<
                 "<div id='taxonRecordsLink' style='visibility:hidden;'>" +
                 " <span id='viewRecordsLink' class='taxonChartCaption'><a class='recordsLink' href='${buildRecordsUrl(attrs.uid)}'>View all records</a></span><br/>" +
@@ -1272,7 +1270,6 @@ class CollectoryTagLib {
      */
     def cleanString = { attrs ->
         def text = attrs.value
-        println text
         // detect json array of strings
         if (text && text.size() > 1 && text[0..1] == '["' && text[text.size()-2..text.size()-1] == '"]') {
             def list = JSON.parse(text.toString())
@@ -1560,7 +1557,6 @@ class CollectoryTagLib {
 
     def showRecordsExceptions = {attrs ->
         def exceptions = attrs.exceptions
-        println exceptions
         if (exceptions) {
             out << '<div class="child-institutions">'
             switch (exceptions.listType) {
@@ -2077,7 +2073,6 @@ class CollectoryTagLib {
 
     def toJson = { attrs ->
         def json = attrs.obj as JSON
-        println json
         out << json.toString()
     }
 

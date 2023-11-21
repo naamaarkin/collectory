@@ -255,7 +255,6 @@ class ProviderGroupService {
             def th = pg.taxonomyHints ? JSON.parse(pg.taxonomyHints) : [:]
             th.range = rangeList
             pg.taxonomyHints = th as JSON
-            println pg.taxonomyHints
 
             pg.userLastModified = collectoryAuthService?.username()
             if (!pg.hasErrors() && pg.save(flush: true)) {

@@ -66,11 +66,9 @@ abstract class ProviderGroupController {
         if (params.version) {
             def version = params.version.toLong()
             if (pg.version > version) {
-                println "db version = ${pg.version} submitted version = ${version}"
                 pg.errors.rejectValue("version", "default.optimistic.locking.failure",
                         [message(code: "${pg.urlForm()}.label", default: pg.entityType())] as Object[],
                         message(code: "provider.group.controller.02", default: "Another user has updated this") + " ${pg.entityType()} " + message(code: "provider.group.controller.03", default: "while you were editing. This page has been refreshed with the current values."))
-                println "error added - rendering ${view}"
                 response.setHeader("Content-type", "text/plain; charset=UTF-8")
                 render(view: view, model: [command: pg])
             }
@@ -192,7 +190,6 @@ abstract class ProviderGroupController {
             if (c.hasErrors()) {
                 c.errors.each {
                     log.debug("Error saving new contact for ${user} - ${it}")
-                    println "Error saving new contact for ${user} - ${it}"
                 }
             }
         }
@@ -200,7 +197,6 @@ abstract class ProviderGroupController {
     }
 
     def cancel = {
-        //println "Cancel - returnTo = ${params.returnTo}"
         if (params.returnTo) {
             redirect(uri: params.returnTo)
         } else {
@@ -381,7 +377,6 @@ abstract class ProviderGroupController {
             def th = pg.taxonomyHints ? JSON.parse(pg.taxonomyHints) : [:]
             th.range = rangeList
             pg.taxonomyHints = th as JSON
-            println pg.taxonomyHints
 
             pg.userLastModified = collectoryAuthService?.username()
             if (!pg.hasErrors()) {
@@ -708,7 +703,6 @@ abstract class ProviderGroupController {
                     file.transferTo(f)
                     activityLogService.log collectoryAuthService?.username(), collectoryAuthService?.userInRole(grailsApplication.config.ROLE_ADMIN), Action.UPLOAD_IMAGE, filename
                 } else {
-                    println "reject file of size ${file.size}"
                     pg.errors.rejectValue('imageRef', 'image.too.big', message(code: "provider.group.controller.13", default: "The image you selected is too large. Images are limited to 200KB."))
                     render(view: "/shared/images", model: [command: pg, target: target])
                     return

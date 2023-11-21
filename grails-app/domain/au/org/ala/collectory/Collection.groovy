@@ -23,7 +23,7 @@ class Collection implements ProviderGroup, Serializable {
     static final String ENTITY_PREFIX = 'co'
 
     static auditable = [ignore: ['version','dateCreated','lastUpdated','userLastModified']]
-    
+
     String collectionType       // list of type of collection as JSON e.g ['live', 'preserved', 'tissue', 'DNA']
     String active               // tdwg developmentStatus
     int numRecords
@@ -268,58 +268,6 @@ class Collection implements ProviderGroup, Serializable {
             return !providerMap.isExact()
         }
         return false
-    }
-
-    /**
-     * Returns a list of all hubs this collection belongs to.
-     *
-     * @return list of DataHub
-     */
-    List listHubMembership() {
-        DataHub.list().findAll {it.isCollectionMember(uid)}
-    }
-
-    /**
-     * Returns a summary of the collection including:
-     * - id
-     * - name
-     * - acronym
-     * - lsid if available
-     * - institution (id,uid, name & logo url) if available
-     * - description
-     * - provider codes for matching with biocache records
-     *
-     * @return CollectionSummary
-     */
-    CollectionSummary buildSummary() {
-        CollectionSummary cs = init(new CollectionSummary()) as CollectionSummary
-        if (institution) {
-            cs.institutionName = institution.name
-            cs.institutionId = institution.id
-            cs.institutionUid = institution.uid
-            if (institution.logoRef?.file) {
-                cs.institutionLogoUrl = au.org.ala.collectory.Utilities.buildInstitutionLogoUrl(institution.logoRef.file)
-            }
-        }
-
-        cs.collectionId = cs.id
-        cs.collectionUid = cs.uid
-        cs.collectionName = cs.name
-
-        cs.derivedInstCodes = getListOfInstitutionCodesForLookup()
-        cs.derivedCollCodes = getListOfCollectionCodesForLookup()
-        cs.hubMembership = listHubMembership().collect { [uid: it.uid, name: it.name] }
-        listProviders().each {
-            def pg = Collection.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'dp') {
-                    cs.relatedDataProviders << [uid: pg.uid, name: pg.name]
-                } else {
-                    cs.relatedDataResources << [uid: pg.uid, name: pg.name]
-                }
-            }
-        }
-        return cs
     }
 
     /**

@@ -29,6 +29,9 @@ class LookupController {
 
     def idGeneratorService
     def providerGroupService
+    def dataResourceService
+    def collectionService
+    def institutionService
 
     static allowedMethods = [citation:['POST','GET']]
 
@@ -97,7 +100,12 @@ class LookupController {
             }
             ProviderGroup pg = ProviderMap.findMatch(inst, coll)
             if (pg) {
-                render pg.buildSummary() as JSON
+                if (pg.uid[0..1] == 'co') {
+                    render collectionService.buildSummary(pg.uid) as JSON
+                } else {
+                    // institution
+                    render institutionService.buildSummary(pg.uid) as JSON
+                }
             } else {
                 def error = ["error":"unable to find collection with inst code = ${inst} and coll code = ${coll}"]
                 render error as JSON
@@ -136,7 +144,15 @@ class LookupController {
             // summary for single entity
             pg = providerGroupService._get(uid)
             if (pg) {
-                render pg.buildSummary() as JSON
+                if (pg.uid[0..1] == 'co') {
+                    render collectionService.buildSummary(pg.uid) as JSON
+                } else if (pg[0..1] == 'in') {
+                    render institutionService.buildSummary(pg.uid) as JSON
+                } else if (pg[0..1] == 'dr') {
+                    render dataResourceService.buildSummary(pg.uid) as JSON
+                } else {
+                    render pg.buildSummary() as JSON
+                }
             } else {
                 log.error "Unable to find entity. id = ${params.id}"
                 def error = ["error":"unable to find entity - id = ${params.id}"]
@@ -146,7 +162,15 @@ class LookupController {
             // return summaries for all
             def list = []
             domain.list().each {
-                list << it.buildSummary()
+                if (it.uid[0..1] == 'co') {
+                    list << collectionService.buildSummary(it.uid)
+                } else if (pg[0..1] == 'in') {
+                    list << institutionService.buildSummary(it.uid)
+                } else if (pg[0..1] == 'dr') {
+                    list << dataResourceService.buildSummary(it.uid)
+                } else {
+                    list << it.buildSummary()
+                }
             }
             render list as JSON
         }
@@ -209,7 +233,15 @@ class LookupController {
             instance = findCollection(params.id)
         }
         if (instance) {
-            render instance.buildSummary() as JSON
+            if (instance.uid[0..1] == 'co') {
+                render collectionService.buildSummary(instance.uid) as JSON
+            } else if (pg[0..1] == 'in') {
+                render institutionService.buildSummary(instance.uid) as JSON
+            } else if (pg[0..1] == 'dr') {
+                render dataResourceService.buildSummary(instance.uid) as JSON
+            } else {
+                render instance.buildSummary() as JSON
+            }
         } else {
             // we would normally log this as a warning but it occurs too often
             //log.warning "Unable to find entity for id = ${params.id}"
