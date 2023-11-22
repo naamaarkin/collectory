@@ -7,7 +7,7 @@ class DataProvider implements ProviderGroup, Serializable {
 
     static auditable = [ignore: ['version','dateCreated','lastUpdated','userLastModified']]
 
-    static hasMany = [resources: DataResource]
+    static hasMany = [resources: DataResource, externalIdentifiers: ExternalIdentifier]
 
     String hiddenJSON // web service only (non-UI) JSON; used by fieldcapture to store project data
 

@@ -356,9 +356,9 @@ class CrudService {
                     riskAssessment = p.riskAssessment
                 }
                 contentTypes = p.contentTypes ? p.contentTypes.formatJSON() : []
-//                if (p.listConsumers()) {
-//                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
-//                }
+                if (p.listConsumers()) {
+                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
+                }
                 if (p.connectionParameters) {
                     def connParams =  p.connectionParameters.formatJSON()
                     if (!apiKey){
@@ -372,7 +372,7 @@ class CrudService {
                 if (p.defaultDarwinCoreValues) {
                     defaultDarwinCoreValues = p.defaultDarwinCoreValues.formatJSON()
                 }
-//                hasMappedCollections = p.hasMappedCollections()
+                hasMappedCollections = p.hasMappedCollections()
                 status = p.status
                 provenance = p.provenance
                 harvestFrequency = p.harvestFrequency
@@ -387,9 +387,9 @@ class CrudService {
                 isShareableWithGBIF = p.isShareableWithGBIF
                 verified = p.isVerified()
                 gbifRegistryKey = p.gbifRegistryKey
-//                if (p.externalIdentifiers) {
-//                    externalIdentifiers = p.externalIdentifiers.formatExternalIdentifiers()
-//                }
+                if (p.externalIdentifiers) {
+                    externalIdentifiers = p.externalIdentifiers.formatExternalIdentifiers()
+                }
                 doi = p.gbifDoi
             }
         }

@@ -51,6 +51,7 @@ class DataResource implements ProviderGroup, Serializable {
         suitableForOtherDetail type: "text"
         dataProvider fetch: 'join'
         institution fetch: 'join'
+        externalIdentifiers fetch: 'join'
     }
 
     String rights
@@ -102,6 +103,8 @@ class DataResource implements ProviderGroup, Serializable {
     String qualityControlDescription
 
     String gbifDoi
+
+    static hasMany = [externalIdentifiers: ExternalIdentifier]
 
     static constraints = {
         guid(nullable:true, maxSize:256)

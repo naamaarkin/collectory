@@ -20,6 +20,7 @@ abstract class ProviderGroupController {
     int TRUNCATE_LENGTH = 255
 
     def idGeneratorService, collectoryAuthService, metadataService, gbifService, dataImportService, providerGroupService, activityLogService
+    def externalIdentifierService
 
     /*
      * Access control
@@ -407,28 +408,30 @@ abstract class ProviderGroupController {
             def sources = params.findAll { key, value ->
                 key.startsWith('source_') && value
             }
-            def external = sources.sort().collect { key, value ->
+
+            // remove existing external identifiers
+            if (pg.externalIdentifiers) {
+                def existing = pg.externalIdentifiers
+                pg.externalIdentifiers = []
+
+                DataResource.withTransaction {
+                    pg.save(flush: true)
+                }
+
+                existing.each { ext -> DataResource.withTransaction { ext.delete(flush: true) } }
+            }
+
+            // add new external identifiers
+            sources.sort().collect { key, value ->
                 def idx = key.substring(7)
                 def source = params[key]
                 def identifier = params."identifier_${idx}"
                 def uri = params."uri_${idx}"
                 if (!uri)
                     uri = null
-                return new ExternalIdentifier(entityUid: pg.uid, source: source, identifier: identifier, uri: uri)
+                externalIdentifierService.addExternalIdentifier(pg.uid, identifier, source, uri)
             }
-            def existing = pg.externalIdentifiers
-            external.each { ext ->
-                def old = existing.find { prev -> prev.same(ext) }
-                if (!old) {
-                    DataResource.withTransaction { ext.save(flush: true) }
-                } else {
-                    old.uri = ext.uri
-                    DataResource.withTransaction { old.save(flush: true) }
-                    existing.remove(old)
-                }
-            }
-            // Delete non-matching, existing external IDs
-            existing.each { ext -> DataResource.withTransaction { ext.delete(flush: true) } }
+
             pg.userLastModified = collectoryAuthService?.username()
             if (!pg.hasErrors()) {
                 DataResource.withTransaction {

@@ -228,38 +228,6 @@ trait ProviderGroup implements Serializable {
     }
 
     /**
-     * Add an external identifier to this object
-     *
-     * @param identifier The identifier
-     * @param source The identifier source (eg. 'GBIF')
-     * @param link A link to the oreiginal source
-     * @return
-     */
-    ExternalIdentifier addExternalIdentifier(String identifier, String source, String link) {
-        ExternalIdentifier ext = new ExternalIdentifier(entityUid: uid, identifier: identifier, source: source, uri: link)
-        ExternalIdentifier.withTransaction {
-            ext.save(flush: true)
-        }
-//        if (ext.hasErrors()) {
-//            ext.errors.each { log.error(it.toString()) }
-//        }
-        return ext
-    }
-
-    /**
-     * Get the external identifiers associated with this entity
-     *
-     * @return The external identifiers
-     */
-    List<ExternalIdentifier> getExternalIdentifiers() {
-        if (uid != null) {
-            return ExternalIdentifier.findAllByEntityUid(uid)
-        } else {
-            return []
-        }
-    }
-
-    /**
      * Remove an external identifier
      *
      * @param identifier

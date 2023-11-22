@@ -66,6 +66,8 @@ class Collection implements ProviderGroup, Serializable {
     // maps to exactly one providerMap
     static hasOne = [providerMap: ProviderMap]
 
+    static hasMany = [externalIdentifiers: ExternalIdentifier]
+
     static transients =  ['listOfCollectionCodesForLookup', 'listOfinstitutionCodesForLookup','mappable','inexactlyMapped','attributionList']
 
     static mapping = {
