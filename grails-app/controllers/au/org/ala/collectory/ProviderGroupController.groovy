@@ -45,7 +45,14 @@ abstract class ProviderGroupController {
      * List providers for institutions/collections
      */
     def showProviders = {
-        def provs = DataLink.findAllByConsumer(params.id).collect {it.provider}
+        def provs = []
+        if (params.id[0..1] == 'co') {
+            Collection c = Collection.findByUid(params.uid)
+            provs = c.providerDataProviders.collect { it.uid } + c.providerDataResources.collect { it.uid }
+        } else {
+            Institution c = Institution.findByUid(params.uid)
+            provs = c.providerDataProviders.collect { it.uid } + c.providerDataResources.collect { it.uid }
+        }
         render provs as JSON
     }
 
@@ -53,7 +60,14 @@ abstract class ProviderGroupController {
      * List consumers of data resources/providers
      */
     def showConsumers = {
-        def cons = DataLink.findAllByProvider(params.id).collect {it.consumer}
+        def cons = []
+        if (params.id[0..1] == 'dr') {
+            DataResource c = DataResource.findByUid(params.uid)
+            cons = c.consumerCollections.collect { it.uid } + c.consumerInstitutions.collect { it.uid }
+        } else {
+            DataProvider c = DataProvider.findByUid(params.uid)
+            cons = c.consumerCollections.collect { it.uid } + c.consumerInstitutions.collect { it.uid }
+        }
         render cons as JSON
     }
 

@@ -53,14 +53,11 @@ class CollectionService {
         cs.derivedInstCodes = collection.getListOfInstitutionCodesForLookup()
         cs.derivedCollCodes = collection.getListOfCollectionCodesForLookup()
         cs.hubMembership = dataHubService.listDataHubs().findAll {it.isCollectionMember(collection.uid)}.collect { [uid: it.uid, name: it.name] }
-        collection.listProviders().each {
-            def pg = Collection.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'dp') {
-                    cs.relatedDataProviders << [uid: pg.uid, name: pg.name]
-                } else {
-                    cs.relatedDataResources << [uid: pg.uid, name: pg.name]
-                }
+        (collection.providerDataResources + collection.providerDataProviders).each {
+            if (it.uid[0..1] == 'dp') {
+                cs.relatedDataProviders << [uid: it.uid, name: it.name]
+            } else {
+                cs.relatedDataResources << [uid: it.uid, name: it.name]
             }
         }
         return cs

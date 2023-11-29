@@ -42,15 +42,12 @@ class DataResourceService {
         drs.downloadLimit = dataResource.downloadLimit
 
         drs.hubMembership = dataHubService.listDataHubs().findAll {it.isDataResourceMember(dataResource.uid)}.collect { [uid: it.uid, name: it.name] }
-        def consumers = dataResource.listConsumers()
+        def consumers = dataResource.consumerInstitutions + dataResource.consumerCollections
         consumers.each {
-            def pg = DataResource.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'co') {
-                    drs.relatedCollections << [uid: pg.uid, name: pg.name]
-                } else {
-                    drs.relatedInstitutions << [uid: pg.uid, name: pg.name]
-                }
+            if (it.uid[0..1] == 'co') {
+                drs.relatedCollections << [uid: it.uid, name: it.name]
+            } else {
+                drs.relatedInstitutions << [uid: it.uid, name: it.name]
             }
         }
         // for backward compatibility

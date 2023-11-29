@@ -131,11 +131,11 @@ class CollectoryAuthService{
     private static String getApiKey(params, HttpServletRequest request) {
         def apiKey = {
             // handle api keys if present in params
-            if (request.JSON && request.JSON.api_key) {
+            if (request.JSON && !(request.JSON instanceof List) && request.JSON.api_key) {
                 request.JSON.api_key
-            } else if (request.JSON && request.JSON.apiKey) {
+            } else if (request.JSON && !(request.JSON instanceof List) && request.JSON.apiKey) {
                 request.JSON.apiKey
-            } else if (request.JSON && request.JSON.Authorization) {
+            } else if (request.JSON && !(request.JSON instanceof List) && request.JSON.Authorization) {
                 request.JSON.Authorization
             } else if (params.api_key) {
                 params.api_key

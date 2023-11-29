@@ -133,8 +133,8 @@ class CrudService {
 
                 // provider specific
                 dataResources = p.resources.briefEntity()
-                if (p.listConsumers()) {
-                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
+                if (p.consumerCollections || p.consumerInstitutions) {
+                    linkedRecordConsumers = (p.consumerCollections + p.consumerInstitutions).collect { [name: it.name, uri: it.buildUri(), uid: it.uid] }
                 }
                 if (p.externalIdentifiers) {
                     externalIdentifiers = p.externalIdentifiers.formatExternalIdentifiers()
@@ -326,6 +326,7 @@ class CrudService {
                     uri = grailsApplication.config.grails.serverURL + "/data/dataResource/" + p.logoRef.file
                 }
             }
+            def consumers = p.consumerCollections + p.consumerInstitutions
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
                 hubMembership = dataHubService.listDataHubs()?.findAll {it.isDataResourceMember(p.uid)}?.formatHubMembership()
@@ -356,8 +357,8 @@ class CrudService {
                     riskAssessment = p.riskAssessment
                 }
                 contentTypes = p.contentTypes ? p.contentTypes.formatJSON() : []
-                if (p.listConsumers()) {
-                    linkedRecordConsumers = formatEntitiesFromUids(p.listConsumers())
+                if (consumers) {
+                    linkedRecordConsumers = consumers.collect { [name: it.name, uri: it.buildUri(), uid: it.uid] }
                 }
                 if (p.connectionParameters) {
                     def connParams =  p.connectionParameters.formatJSON()
@@ -570,6 +571,7 @@ class CrudService {
                     uri = grailsApplication.config.grails.serverURL + "/data/institution/" + p.logoRef.file
                 }
             }
+            def providers = p.providerDataResources + p.providerDataProviders
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
                 hubMembership = dataHubService.listDataHubs()?.findAll {it.isInstitutionMember(p.uid)}?.formatHubMembership()
@@ -583,8 +585,8 @@ class CrudService {
                 collections = p.collections.briefEntity()
                 parentInstitutions = p.listParents().briefEntity()
                 childInstitutions = p.listChildren().briefEntity()
-                if (p.listProviders()) {
-                    linkedRecordProviders = formatEntitiesFromUids(p.listProviders())
+                if (providers) {
+                    linkedRecordProviders = providers.collect { [name: it.name, uri: it.buildUri(), uid: it.uid] }
                 }
                 gbifRegistryKey = p.gbifRegistryKey
                 if (p.externalIdentifiers) {
@@ -661,6 +663,7 @@ class CrudService {
                     uri = grailsApplication.config.grails.serverURL + "/data/collection/" + p.imageRef.file
                 }
             }
+            def providers = p.providerDataResources + p.providerDataProviders
             use (OutputFormat) {
                 networkMembership = p.networkMembership?.formatNetworkMembership()
                 hubMembership = dataHubService.listDataHubs()?.findAll {it.isCollectionMember(p.uid)}?.formatHubMembership()
@@ -711,8 +714,8 @@ class CrudService {
                         lastUpdated = p.providerMap.lastUpdated
                     }
                 }
-                if (p.listProviders()) {
-                    linkedRecordProviders = formatEntitiesFromUids(p.listProviders())
+                if (providers) {
+                    linkedRecordProviders = providers.collect { [name: it.name, uri: it.buildUri(), uid: it.uid] }
                 }
                 gbifRegistryKey = p.gbifRegistryKey
                 if (p.externalIdentifiers) {

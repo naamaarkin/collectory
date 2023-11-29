@@ -319,10 +319,10 @@ class LookupController {
     }
 
     def downloadLimits = {
-        def list = DataResource.list(sort: "uid").findAll({it.downloadLimit > 0}).collect {
-            [uid: it.uid,
-            name: it.name,
-            downloadLimit: it.downloadLimit]
+        def list = DataResource.executeQuery("select uid, name, downloadLimit from DataResource where downloadLimit > 0 order by uid").collect {
+            [uid: it[0],
+            name: it[1],
+            downloadLimit: it[2]]
         }
         render list as JSON
     }

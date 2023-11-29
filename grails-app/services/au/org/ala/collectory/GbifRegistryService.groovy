@@ -222,15 +222,8 @@ class GbifRegistryService {
         if (!institution) {
 
             //get the data provider if available...
-            def dataLinks = DataLink.findAllByProvider(dataResource.uid)
-            def institutionDataLink
-
-            if (dataLinks) {
-                //do we have institution link ????
-                institutionDataLink = dataLinks.find { it.consumer.startsWith("in") }
-                if (institutionDataLink) {
-                    institution = Institution.findByUid(institutionDataLink.consumer)
-                }
+            if (dataResource.consumerInstitutions) {
+                institution = dataResource.consumerInstitutions.first()
             }
         }
 
@@ -354,12 +347,9 @@ class GbifRegistryService {
                         skipSync = true
                     }
 
-                    def dataLinks = DataLink.findAllByProvider(dp.uid)
-                    dataLinks.each { dataLink ->
-                        if (dataLink.consumer.startsWith("in")){
-                            skipSync = true
-                            log.warn("${resource.uid} is linked to an institution [${dataLink.consumer}]... not syncing  ")
-                        }
+                    if (dp.consumerInstitutions) {
+                        skipSync = true
+                        log.warn("${resource.uid} is linked to an institution [${dataLink.consumer}]... not syncing  ")
                     }
 
                     if (!skipSync) {
@@ -368,13 +358,9 @@ class GbifRegistryService {
                 }
             } else {
                 log.warn("Need to add syncing of resources for institution....via datalinks...")
-                def dataLinks = DataLink.findAllByConsumer(dp.uid)
-                if (dataLinks) {
-                    dataLinks.each { dataLink ->
-                        DataResource dr = DataResource.findByUid(dataLink.provider)
-                        if (dr) {
-                            syncDataResource(dr, dp.gbifRegistryKey)
-                        }
+                if (dp instanceof Collection || dp instanceof Institution) {
+                    dp.providerDataResource.each { DataResource dr ->
+                        syncDataResource(dr, dp.gbifRegistryKey)
                     }
                 }
             }
@@ -861,16 +847,11 @@ class GbifRegistryService {
                 def institution
 
                 //get the data provider if available...
-                def dataLinks = DataLink.findAllByProvider(uid)
-                def institutionDataLink
+                def institutionDataLink = dataResource.consumerInstitutions
 
-                if (dataLinks){
-                    //do we have institution link ????
-                    institutionDataLink = dataLinks.find { it.consumer.startsWith("in")}
-                    if(institutionDataLink){
-                        //we have an institution
-                        institution = Institution.findByUid(institutionDataLink.consumer)
-                    }
+                if(institutionDataLink){
+                    //we have an institution
+                    institution = institutionDataLink.first()
                 }
 
                 if(!institutionDataLink) {
@@ -1089,19 +1070,13 @@ class GbifRegistryService {
                     } else {
 
                         //get the data provider if available...
-                        def dataLinks = DataLink.findAllByProvider(uid)
-                        def institutionDataLink
+                        def institutionDataLink = dataResource.consumerInstitutions
 
-                        if (dataLinks) {
-                            //do we have institution link ????
-                            institutionDataLink = dataLinks.find { it.consumer.startsWith("in") }
-                            if (institutionDataLink) {
+                        if (institutionDataLink) {
+                            institution = institutionDataLink.first()
 
-                                institution = Institution.findByUid(institutionDataLink.consumer)
-
-                                //we have an institution
-                                linkedToInstitution[dataResource.uid] = institution
-                            }
+                            //we have an institution
+                            linkedToInstitution[dataResource.uid] = institution
                         }
                     }
 

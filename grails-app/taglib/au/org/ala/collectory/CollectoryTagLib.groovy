@@ -1446,9 +1446,12 @@ class CollectoryTagLib {
         out << "<img class='editImg' style='margin-right:5px;vertical-align:middle' src='${resource(dir:'images/ala',file:'edit.png')}'/>\n"
         out << link(controller:attrs.instance.urlForm(), action:'show', id:attrs.instance.uid) {"Edit metadata"}
         out << " for this ${attrs.instance.textFormOfEntityType(attrs.instance.uid)}. You need<br/>appropriate authorisation to do this. You will<br/>be asked to log in if you are not already.</p>\n"
-        def providers = attrs.instance.listProviders()
-        if (attrs.instance instanceof Collection && attrs.instance.institution) {
-            providers += attrs.instance.institution?.listProviders()
+        def providers = []
+        if (attrs.instance instanceof Collection) {
+            providers = attrs.instance.providerDataProviders + attrs.instance.providerDataResources
+            if (attrs.instance.institution) {
+                providers += attrs.instance.institution.providerDataProviders + attrs.instance.institution.providerDataResources
+            }
         }
         if (providers) {
             boolean first = true
@@ -1458,18 +1461,18 @@ class CollectoryTagLib {
                     out << "<p class='viewList' style='margin-top:5px;'>View data sources<br/><ul>\n"
                     first = false
                 }
-                def provider = providerGroupService._get(it)
-                if (provider) {
-                    out << "<li>" +
-                            link(action:'show',id:provider.uid) {provider.name} +
-                            "</li>\n"
-                }
+                out << "<li>" +
+                        link(action:'show',id:it.uid) {it.name} +
+                        "</li>\n"
             }
             out << "</ul></p>\n"
         }
-        def consumers = attrs.instance.listConsumers()
-        if (attrs.instance instanceof DataResource && attrs.instance.dataProvider) {
-            consumers += attrs.instance.dataProvider?.listConsumers()
+        def consumers = []
+        if (attrs.instance instanceof DataProvider || attrs.instance instanceof DataResource) {
+            consumers += attrs.instance.consumerInstitutions + attrs.instance.consumerCollections
+            if (attrs.instance.dataProvider) {
+                consumers += attrs.instance.dataProvider.consumerInstitutions + attrs.instance.dataProvider.consumerCollections
+            }
         }
         if (consumers) {
             boolean first = true
@@ -1479,12 +1482,9 @@ class CollectoryTagLib {
                     out << "<p class='viewList' style='margin-top:5px;'>View data consumers<br/><ul>\n"
                     first = false
                 }
-                def consumer = providerGroupService._get(it)
-                if (consumer) {
-                    out << "<li>" +
-                            link(action:'show',id:consumer.uid) {consumer.name} +
-                            "</li>\n"
-                }
+                out << "<li>" +
+                        link(action:'show',id:it.uid) {it.name} +
+                        "</li>\n"
             }
             out << "</ul></p>\n"
         }

@@ -49,9 +49,9 @@ class DataResource implements ProviderGroup, Serializable {
         dataCollectionProtocolDoc type: "text"
         suitableFor type: "text"
         suitableForOtherDetail type: "text"
-        dataProvider fetch: 'join'
-        institution fetch: 'join'
-        externalIdentifiers fetch: 'join'
+
+        consumerInstitutions joinTable:[name:"data_resource_institution", key:'data_resource_id' ]
+        consumerCollections joinTable:[name:"data_resource_collection", key:'data_resource_id' ]
     }
 
     String rights
@@ -104,7 +104,7 @@ class DataResource implements ProviderGroup, Serializable {
 
     String gbifDoi
 
-    static hasMany = [externalIdentifiers: ExternalIdentifier]
+    static hasMany = [externalIdentifiers: ExternalIdentifier, consumerInstitutions: Institution, consumerCollections: Collection]
 
     static constraints = {
         guid(nullable:true, maxSize:256)
@@ -245,7 +245,7 @@ class DataResource implements ProviderGroup, Serializable {
      * @return
      */
     boolean hasMappedCollections() {
-        return listConsumers().size() as boolean
+        return consumerInstitutions || consumerCollections
     }
 
     /**

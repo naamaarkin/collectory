@@ -396,14 +396,14 @@ trait ProviderGroup implements Serializable {
      * @return list of Attribution
      */
     List<Attribution> getAttributionList() {
-        def uids = attributions?:''.tokenize(' ')
+        def uids = (attributions?:'').tokenize(' ')
         List<Attribution> list = []
-        uids.each {
-            def att = Attribution.findByUid(it as String)
-            if (att) {
-                list << att
+        if (uids) {
+            list = Attribution.createCriteria().list {
+                in('uid', uids)
             }
         }
+
         return list
     }
 
@@ -423,7 +423,7 @@ trait ProviderGroup implements Serializable {
     }
 
     void removeAttribution(String attributionUid) {
-        def uids = attributions.tokenize(' ')
+        def uids = (attributions?:'').tokenize(' ')
         uids.remove attributionUid
         attributions = uids.join(' ')
     }
@@ -450,7 +450,11 @@ trait ProviderGroup implements Serializable {
      * @return
      */
     List<String> listProviders() {
-        DataLink.findAllByConsumer(this.uid).collect {it.provider}
+        if (this instanceof Collection || this instanceof Institution) {
+            (this.consumerInstitutions + this.consumerCollections).collect { it.uid }
+        } else {
+            []
+        }
     }
 
     /**
@@ -458,7 +462,11 @@ trait ProviderGroup implements Serializable {
      * @return
      */
     def List<String> listConsumers() {
-        DataLink.findAllByProvider(this.uid).collect {it.consumer}
+        if (this instanceof DataProvider || this instanceof DataResource) {
+            (this.consumerInstitutions + this.consumerCollections).collect { it.uid }
+        } else {
+            []
+        }
     }
 
     /**

@@ -1,6 +1,5 @@
 package au.org.ala.collectory
 
-import au.org.ala.collectory.AuditLogEvent
 import grails.converters.JSON
 
 class ReportsController {
@@ -307,7 +306,18 @@ class ReportsController {
     }
 
     def dataLinks = {
-        [links: DataLink.list([sort:'provider'])]
+        def links = (DataProvider.executeQuery("select dp.uid, c.uid from DataProvider dp inner join dp.consumerInstitutions c") +
+        DataProvider.executeQuery("select dp.uid, c.uid from DataProvider dp inner join dp.consumerCollections c")+
+        DataProvider.executeQuery("select dr.uid, c.uid from DataResource dr inner join dr.consumerInstitutions c")+
+        DataProvider.executeQuery("select dr.uid, c.uid from DataResource dr inner join dr.consumerCollections c")).collect {
+            [consumer: it[1], provider: it[0]]
+        }
+
+        def sorted = links.sort {a, b ->
+            a.provider.compareTo(b.provider)
+        }
+
+        [links: sorted]
     }
 
     class ReportCommand {

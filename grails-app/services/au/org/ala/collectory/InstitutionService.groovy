@@ -40,15 +40,11 @@ class InstitutionService {
         is.institutionUid = institution.uid
         is.institutionName = institution.name
         is.collections = institution.collections.collect { [it.uid, it.name] }
-        institution.listProviders().each {
-            def pg = Institution.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'dp') {
-                    is.relatedDataProviders << [uid: pg.uid, name: pg.name]
-                } else {
-                    is.relatedDataResources << [uid: pg.uid, name: pg.name]
-                }
-            }
+        institution.providerDataProviders.each {
+            is.relatedDataProviders << [uid: it.uid, name: it.name]
+        }
+        institution.providerDataResources.each {
+            is.relatedDataResources << [uid: it.uid, name: it.name]
         }
         is.hubMembership = dataHubService.listDataHubs().findAll {it.isInstitutionMember(institution.uid)}.collect { [uid: it.uid, name: it.name] }
         return is

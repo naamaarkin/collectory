@@ -43,7 +43,7 @@ class DataController {
         def uid = params.uid
         if (uid) {
             // it must exist
-            def pg = uid.startsWith('drt') ? TempDataResource.findByUid(uid) : providerGroupService._get(uid)
+            def pg = uid.startsWith('drt') ? TempDataResource.findByUid(uid) : providerGroupService._getEager(uid)
             if (pg) {
                 params.pg = pg
                 // if entity is specified, the instance must be of type entity
@@ -283,6 +283,12 @@ class DataController {
     @Path("/ws/{entity}/{uid}")
     @Produces("application/json")
     def saveEntity() {
+        // Failed to intercept this request in UrlMappings, doing it here and in `CollectoryWebServicesInterceptor`
+        if (!params.uid) {
+            getEntities()
+            return
+        }
+
         def ok = check(params)
         if (ok) {
             def pg = params.pg
@@ -485,6 +491,48 @@ class DataController {
                 renderAsJson summaries, last, eTag
             }
         }
+    }
+
+    @Path("/ws/{entity}")
+    @Produces("application/json")
+    def getEntities() {
+
+        def result = []
+
+        def authCheck = false
+        if (params.entity == 'dataResource') {
+            // this auth check (JWT or API key) is a special case handling to support backwards compatibility(which used to check for API key).
+            String requiredRoles = grailsApplication.config.ROLE_ADMIN
+            authCheck = collectoryAuthService.isAuthorisedWsRequest(getParams(), request, response, requiredRoles, null)
+        }
+
+        def clazz = capitalise(params.entity)
+
+        request.JSON.each {
+            def item
+            if (params.entity == 'tempDataResource') {
+                item = crudService.readTempDataResource(it)
+            } else {
+                def pg = providerGroupService._getEager(it)
+                if (pg) {
+                    if (params.entity == 'dataResource') {
+                        item = crudService."read${clazz}"(pg, authCheck)
+                    } else {
+                        item = crudService."read${clazz}"(pg)
+                    }
+                } else {
+                    log.debug("cannot find: " + it)
+                }
+            }
+            if (item) {
+                result.add(metadataService.convertAnyLocalPaths(item))
+            }
+        }
+
+        response.setContentType("application/json")
+        response.setCharacterEncoding("UTF-8")
+
+        render result as JSON
     }
 
     @Operation(
@@ -799,7 +847,7 @@ class DataController {
     @Produces("text/xml")
     def eml() {
         if (params.id) {
-            def pg = providerGroupService._get(params.id)
+            def pg = providerGroupService._getEager(params.id)
             if (pg) {
                 response.contentType = 'text/xml'
                 def xml = emlRenderService.emlForEntity(pg)
@@ -864,7 +912,7 @@ class DataController {
             // just do hubs to start
             int validCount = 0
             def invalid = []
-            //DataHub.list().each {
+
             Collection.list().each {
                 def xml = emlRenderService.emlForEntity(it)
                 def error = ''
@@ -1070,7 +1118,6 @@ class DataController {
         }
         def props = params.json
         props.userLastModified = session.username
-        //println "body = "  + props
         if (params.id) {
             // update
             def c = Contact.get(params.id)
@@ -1290,12 +1337,11 @@ class DataController {
         if (!ok) {
             return
         }
-        //println "notify"
+
         if (request.method != 'POST') {
             log.error("not allowed")
             notAllowed()
         } else {
-            //println params.json
             def payload = params.json
             def uid = payload.uid
             def event = payload.event
@@ -1305,7 +1351,6 @@ class DataController {
                 log.error("bad request")
                 badRequest 'must specify a uid, an event and an event id'
             } else {
-                //println "OK"
                 // register the event
                 activityLogService.log([user: 'notify-service', isAdmin: false, action: "${action}d ${id}", entityUid: uid])
                 success "notification accepted"
@@ -1406,7 +1451,6 @@ class DataController {
         }
         def props = params.json
         props.userLastModified = session.username
-        //println "body = "  + props
         def c = Contact.get(params.id)
         def cf = ContactFor.findByContactAndEntityUid(c, params.pg.uid)
         if (cf) {

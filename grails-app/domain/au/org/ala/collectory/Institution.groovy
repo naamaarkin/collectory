@@ -106,11 +106,11 @@ class Institution implements ProviderGroup, Serializable {
     def listCollections() {
         List result = collections.collect {it}
         if (childInstitutions) {
-            childInstitutions.tokenize(' ').each {
-                def i = get(it)
-                if (i) {
-                    result.addAll i.listCollections()
-                }
+            def list = childInstitutions.tokenize(' ')
+            Collections.createCriteria().list (fetch: [collections: 'join']) {
+                in ('id', list)
+            }.each {
+                result.addAll it.listCollections()
             }
         }
         return result
@@ -186,7 +186,27 @@ class Institution implements ProviderGroup, Serializable {
 //    }
 
 
-    List<DataLink> getLinkedDataResources() {
-        return DataLink.findAllByConsumer(this.uid)
+    List<String> getLinkedDataResources() {
+        return providerDataProviders.collect { it.uid } + providerDataResources.collect { it.uid }
+    }
+
+    def getProviderDataResources() {
+        def c = DataResource.createCriteria()
+        def result = c.list {
+            consumerInstitutions {
+                idEq(this.id)
+            }
+        }
+        return result
+    }
+
+    def getProviderDataProviders() {
+        def c = DataProvider.createCriteria()
+        def result = c.list {
+            consumerInstitutions {
+                idEq(this.id)
+            }
+        }
+        return result
     }
 }

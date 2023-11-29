@@ -142,10 +142,10 @@ class Collection implements ProviderGroup, Serializable {
         numRecordsDigitised()
         states(nullable:true)
         geographicDescription(nullable:true)
-        eastCoordinate(max:360.0, min:-360.0, scale:10)
-        westCoordinate(max:360.0, min:-360.0, scale:10)
-        northCoordinate(max:360.0, min:-360.0, scale:10)
-        southCoordinate(max:360.0, min:-360.0, scale:10)
+        eastCoordinate(max:360.0, min:-360.0, scale:10, precision: 13)
+        westCoordinate(max:360.0, min:-360.0, scale:10, precision: 13)
+        northCoordinate(max:360.0, min:-360.0, scale:10, precision: 13)
+        southCoordinate(max:360.0, min:-360.0, scale:10, precision: 13)
         startDate(nullable:true, maxSize:45)
         endDate(nullable:true, maxSize:45)
         kingdomCoverage(nullable:true, maxSize:1024,
@@ -383,4 +383,23 @@ class Collection implements ProviderGroup, Serializable {
         return ENTITY_TYPE
     }
 
+    def getProviderDataResources() {
+        def c = DataResource.createCriteria()
+        def result = c.list {
+            consumerCollections {
+                idEq(this.id)
+            }
+        }
+        return result
+    }
+
+    def getProviderDataProviders() {
+        def c = DataProvider.createCriteria()
+        def result = c.list {
+            consumerCollections {
+                idEq(this.id)
+            }
+        }
+        return result
+    }
 }
