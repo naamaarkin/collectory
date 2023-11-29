@@ -493,6 +493,54 @@ class DataController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+            operationId = "getEntities",
+            summary = "Get an entity for a list of entity uids",
+            description = "Get detailed information for a list of entities",
+            parameters = [
+                    @Parameter(
+                            name = "entity",
+                            in = PATH,
+                            description = "entity type; collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+                            schema = @Schema(implementation = String),
+                            example = "collection",
+                            required = true
+                    ),
+                    @Parameter(
+                            name = "apikey",
+                            in = HEADER,
+                            description = "authorisation for dataResource connection details",
+                            schema = @Schema(implementation = String),
+                            required = false
+                    )
+            ],
+            requestBody = @RequestBody(
+                    description = "List of uids as JSON list",
+                    content = [
+                        @Content(mediaType = "application/json")
+                    ]
+            ),
+            responses = [
+                    @ApiResponse(
+                            description = "Entity Info",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            array = @ArraySchema(schema = @Schema(oneOf = [Collection, Institution, DataProvider, DataResource, TempDataResource, DataHub]))
+                                    )
+                            ],
+                            headers = [
+                                    @Header(name = 'Access-Control-Allow-Headers', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Methods', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Origin', description = "CORS header", schema = @Schema(type = "String"))
+                            ]
+                    )
+            ],
+            security = []
+    )
     @Path("/ws/{entity}")
     @Produces("application/json")
     def getEntities() {
