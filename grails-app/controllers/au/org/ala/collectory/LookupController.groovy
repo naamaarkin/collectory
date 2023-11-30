@@ -101,10 +101,10 @@ class LookupController {
             ProviderGroup pg = ProviderMap.findMatch(inst, coll)
             if (pg) {
                 if (pg.uid[0..1] == 'co') {
-                    render collectionService.buildSummary(pg.uid) as JSON
+                    render collectionService.buildSummary(pg) as JSON
                 } else {
                     // institution
-                    render institutionService.buildSummary(pg.uid) as JSON
+                    render institutionService.buildSummary(pg) as JSON
                 }
             } else {
                 def error = ["error":"unable to find collection with inst code = ${inst} and coll code = ${coll}"]
@@ -145,11 +145,11 @@ class LookupController {
             pg = providerGroupService._get(uid)
             if (pg) {
                 if (pg.uid[0..1] == 'co') {
-                    render collectionService.buildSummary(pg.uid) as JSON
+                    render collectionService.buildSummary(pg) as JSON
                 } else if (pg[0..1] == 'in') {
-                    render institutionService.buildSummary(pg.uid) as JSON
+                    render institutionService.buildSummary(pg) as JSON
                 } else if (pg[0..1] == 'dr') {
-                    render dataResourceService.buildSummary(pg.uid) as JSON
+                    render dataResourceService.buildSummary(pg) as JSON
                 } else {
                     render pg.buildSummary() as JSON
                 }
@@ -163,11 +163,11 @@ class LookupController {
             def list = []
             domain.list().each {
                 if (it.uid[0..1] == 'co') {
-                    list << collectionService.buildSummary(it.uid)
+                    list << collectionService.buildSummary(it)
                 } else if (pg[0..1] == 'in') {
-                    list << institutionService.buildSummary(it.uid)
+                    list << institutionService.buildSummary(it)
                 } else if (pg[0..1] == 'dr') {
-                    list << dataResourceService.buildSummary(it.uid)
+                    list << dataResourceService.buildSummary(it)
                 } else {
                     list << it.buildSummary()
                 }
@@ -234,11 +234,11 @@ class LookupController {
         }
         if (instance) {
             if (instance.uid[0..1] == 'co') {
-                render collectionService.buildSummary(instance.uid) as JSON
+                render collectionService.buildSummary(instance) as JSON
             } else if (pg[0..1] == 'in') {
-                render institutionService.buildSummary(instance.uid) as JSON
+                render institutionService.buildSummary(instance) as JSON
             } else if (pg[0..1] == 'dr') {
-                render dataResourceService.buildSummary(instance.uid) as JSON
+                render dataResourceService.buildSummary(instance) as JSON
             } else {
                 render instance.buildSummary() as JSON
             }

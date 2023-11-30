@@ -115,7 +115,7 @@ class CollectionController extends ProviderGroupController {
     def summary = {
         Collection collectionInstance = findCollection(params.id)
         if (collectionInstance) {
-            render collectionService.buildSummary(collectionInstance.uid) as JSON
+            render collectionService.buildSummary(collectionInstance) as JSON
         } else {
             log.error "Unable to find collection for id = ${params.id}"
             def error = ["error":"unable to find collection for id = " + params.id]
@@ -144,10 +144,10 @@ class CollectionController extends ProviderGroupController {
         ProviderGroup pg = ProviderMap.findMatch(inst, coll)
         if (pg) {
             if (pg[0..1] == 'co') {
-                render collectionService.buildSummary(pg.uid) as JSON
+                render collectionService.buildSummary(pg) as JSON
             } else {
                 // institution
-                render institutionService.buildSummary(pg.uid) as JSON
+                render institutionService.buildSummary(pg) as JSON
             }
         } else {
             def error = ["error":"unable to find collection with inst code = ${inst} and coll code = ${coll}"]

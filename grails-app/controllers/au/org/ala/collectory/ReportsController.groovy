@@ -86,7 +86,7 @@ class ReportsController {
 
     def codes = {
         [codeSummaries: (ProviderMap.list().collect {
-            collectionService.buildSummary(it.collection.uid)
+            collectionService.buildSummary(it.collection)
         }).sort {it.name}]
     }
 
@@ -218,13 +218,13 @@ class ReportsController {
     def attributions = {
         def collAttributions = []
         Collection.list([sort: 'name']).each {
-            ProviderGroupSummary pgs = collectionService.buildSummary(it.uid)
+            ProviderGroupSummary pgs = collectionService.buildSummary(it)
             List<Attribution> attribs = it.getAttributionList()
             def ats = new Attributions(pgs, attribs)
             collAttributions << ats
         }
         def instAttributions = Institution.list([sort: 'name']).collect {
-            ProviderGroupSummary pgs = institutionService.buildSummary(it.uid)
+            ProviderGroupSummary pgs = institutionService.buildSummary(it)
             List<Attribution> attribs = it.getAttributionList()
             new Attributions(pgs, attribs)
         }
@@ -249,7 +249,7 @@ class ReportsController {
                 }
                 // compare to num digistised
                 if (count == 0 || (count / it.numRecordsDigitised) < 0.7) {
-                    mrs << [collection: collectionService.buildSummary(it.uid), biocacheCount: count, claimed: it.numRecordsDigitised]
+                    mrs << [collection: collectionService.buildSummary(it), biocacheCount: count, claimed: it.numRecordsDigitised]
                 }
             }
         }
