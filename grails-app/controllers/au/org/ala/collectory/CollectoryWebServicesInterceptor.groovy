@@ -33,10 +33,6 @@ class CollectoryWebServicesInterceptor {
 
     }
     boolean before() {
-        // Failed to intercept this request in UrlMappings, doing it here and in `saveEntity`
-        if (request.method == "POST" && !params.uid) {
-            return true
-        }
 
         // set default role requirement for protected ROLE_EDITOR as the same info is only available to ROLE_EDITOR via the UI.
         String requiredRole = grailsApplication.config.ROLE_EDITOR

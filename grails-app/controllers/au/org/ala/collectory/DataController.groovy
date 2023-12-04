@@ -225,14 +225,12 @@ class DataController {
      * @param pg - optional instance specified by uid (added in beforeInterceptor)
      * @param json - the body of the request
      */
-    // NOTE  - Sine the same method below saveEntity is used for saving and updating an entity - OpenAPI specs for both save and update operations cannot be added on Code.
-    // API Gateway handles the below by using the {entity+} wildcard but for swagger specs in the documentation portal. additional spec has been added for just the /{entity} path - which allows Inserting of an entity
     @Operation(
             method = "POST",
             tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
             operationId = "updateEntity",
-            summary = "Insert or  update an entity",
-            description = "Insert or update an  entity  - if uid is specified, entity must exist and is updated with the provided data",
+            summary = "Update an entity",
+            description = "Update an  entity  - if uid is specified, entity must exist and is updated with the provided data",
             parameters = [
                     @Parameter(
                             name = "entity",
@@ -245,10 +243,10 @@ class DataController {
                     @Parameter(
                             name = "uid",
                             in = PATH,
-                            description = "optional uid of an instance of entity",
+                            description = "uid of an instance of entity",
                             schema = @Schema(implementation = String),
                             example = "co43",
-                            required = false
+                            required = true
                     )
             ],
             requestBody = @RequestBody(
@@ -283,11 +281,6 @@ class DataController {
     @Path("/ws/{entity}/{uid}")
     @Produces("application/json")
     def saveEntity() {
-        // Failed to intercept this request in UrlMappings, doing it here and in `CollectoryWebServicesInterceptor`
-        if (!params.uid) {
-            getEntities()
-            return
-        }
 
         def ok = check(params)
         if (ok) {
@@ -320,6 +313,57 @@ class DataController {
                 }
             }
         }
+    }
+
+    @Operation(
+            method = "POST",
+            tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+            operationId = "createEntity",
+            summary = "create entity",
+            description = "create entity",
+            parameters = [
+                    @Parameter(
+                            name = "entity",
+                            in = PATH,
+                            description = "entity i.e.  collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+                            schema = @Schema(implementation = String),
+                            example = "collection",
+                            required = true
+                    )
+            ],
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "A JSON object containing the entity to be saved or updated",
+                    content = [
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = Object)
+                            )
+                    ]
+            ),
+            responses = [
+                    @ApiResponse(
+                            description = "Status of operation",
+                            responseCode = "201",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = Object)
+                                    )
+                            ],
+                            headers = [
+                                    @Header(name = 'Access-Control-Allow-Headers', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Methods', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Origin', description = "CORS header", schema = @Schema(type = "String"))
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+    )
+    @Path("/ws/{entity}")
+    @Produces("application/json")
+    def createEntity() {
+        saveEntity()
     }
 
     /**
@@ -496,9 +540,9 @@ class DataController {
     @Operation(
             method = "POST",
             tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
-            operationId = "getEntities",
-            summary = "Get an entity for a list of entity uids",
-            description = "Get detailed information for a list of entities",
+            operationId = "findEntities",
+            summary = "Find entities for a list of entity uids",
+            description = "Find detailed information for a list of entities",
             parameters = [
                     @Parameter(
                             name = "entity",
@@ -541,9 +585,9 @@ class DataController {
             ],
             security = []
     )
-    @Path("/ws/{entity}")
+    @Path("/ws/find/{entity}")
     @Produces("application/json")
-    def getEntities() {
+    def findEntities() {
 
         def result = []
 
