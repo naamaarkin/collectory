@@ -1455,14 +1455,14 @@ class CollectoryTagLib {
         }
         if (providers) {
             boolean first = true
-            providers.each {
+            providers.each { provider ->
                 // only write the header if we have at least one resource
                 if (first) {
                     out << "<p class='viewList' style='margin-top:5px;'>View data sources<br/><ul>\n"
                     first = false
                 }
                 out << "<li>" +
-                        link(action:'show',id:it.uid) {it.name} +
+                        link(action:'show',id:provider.uid) {provider.name} +
                         "</li>\n"
             }
             out << "</ul></p>\n"
@@ -1476,14 +1476,14 @@ class CollectoryTagLib {
         }
         if (consumers) {
             boolean first = true
-            consumers.each {
+            consumers.each { consumer ->
                 // only write the header if we have at least one resource
                 if (first) {
                     out << "<p class='viewList' style='margin-top:5px;'>View data consumers<br/><ul>\n"
                     first = false
                 }
                 out << "<li>" +
-                        link(action:'show',id:it.uid) {it.name} +
+                        link(action:'show',id:consumer.uid) {consumer.name} +
                         "</li>\n"
             }
             out << "</ul></p>\n"
