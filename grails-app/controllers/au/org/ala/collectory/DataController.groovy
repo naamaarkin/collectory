@@ -43,7 +43,7 @@ class DataController {
         def uid = params.uid
         if (uid) {
             // it must exist
-            def pg = uid.startsWith('drt') ? TempDataResource.findByUid(uid) : providerGroupService._get(uid)
+            def pg = uid.startsWith('drt') ? TempDataResource.findByUid(uid) : providerGroupService._getEager(uid)
             if (pg) {
                 params.pg = pg
                 // if entity is specified, the instance must be of type entity
@@ -225,14 +225,12 @@ class DataController {
      * @param pg - optional instance specified by uid (added in beforeInterceptor)
      * @param json - the body of the request
      */
-    // NOTE  - Sine the same method below saveEntity is used for saving and updating an entity - OpenAPI specs for both save and update operations cannot be added on Code.
-    // API Gateway handles the below by using the {entity+} wildcard but for swagger specs in the documentation portal. additional spec has been added for just the /{entity} path - which allows Inserting of an entity
     @Operation(
             method = "POST",
             tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
             operationId = "updateEntity",
-            summary = "Insert or  update an entity",
-            description = "Insert or update an  entity  - if uid is specified, entity must exist and is updated with the provided data",
+            summary = "Update an entity",
+            description = "Update an  entity  - if uid is specified, entity must exist and is updated with the provided data",
             parameters = [
                     @Parameter(
                             name = "entity",
@@ -245,10 +243,10 @@ class DataController {
                     @Parameter(
                             name = "uid",
                             in = PATH,
-                            description = "optional uid of an instance of entity",
+                            description = "uid of an instance of entity",
                             schema = @Schema(implementation = String),
                             example = "co43",
-                            required = false
+                            required = true
                     )
             ],
             requestBody = @RequestBody(
@@ -283,6 +281,7 @@ class DataController {
     @Path("/ws/{entity}/{uid}")
     @Produces("application/json")
     def saveEntity() {
+
         def ok = check(params)
         if (ok) {
             def pg = params.pg
@@ -314,6 +313,57 @@ class DataController {
                 }
             }
         }
+    }
+
+    @Operation(
+            method = "POST",
+            tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+            operationId = "createEntity",
+            summary = "create entity",
+            description = "create entity",
+            parameters = [
+                    @Parameter(
+                            name = "entity",
+                            in = PATH,
+                            description = "entity i.e.  collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+                            schema = @Schema(implementation = String),
+                            example = "collection",
+                            required = true
+                    )
+            ],
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "A JSON object containing the entity to be saved or updated",
+                    content = [
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = Object)
+                            )
+                    ]
+            ),
+            responses = [
+                    @ApiResponse(
+                            description = "Status of operation",
+                            responseCode = "201",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = Object)
+                                    )
+                            ],
+                            headers = [
+                                    @Header(name = 'Access-Control-Allow-Headers', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Methods', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Origin', description = "CORS header", schema = @Schema(type = "String"))
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+    )
+    @Path("/ws/{entity}")
+    @Produces("application/json")
+    def createEntity() {
+        saveEntity()
     }
 
     /**
@@ -485,6 +535,96 @@ class DataController {
                 renderAsJson summaries, last, eTag
             }
         }
+    }
+
+    @Operation(
+            method = "POST",
+            tags = "collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+            operationId = "findEntities",
+            summary = "Find entities for a list of entity uids",
+            description = "Find detailed information for a list of entities",
+            parameters = [
+                    @Parameter(
+                            name = "entity",
+                            in = PATH,
+                            description = "entity type; collection, institution, dataProvider, dataResource, tempDataResource, dataHub",
+                            schema = @Schema(implementation = String),
+                            example = "collection",
+                            required = true
+                    ),
+                    @Parameter(
+                            name = "apikey",
+                            in = HEADER,
+                            description = "authorisation for dataResource connection details",
+                            schema = @Schema(implementation = String),
+                            required = false
+                    )
+            ],
+            requestBody = @RequestBody(
+                    description = "List of uids as JSON list",
+                    content = [
+                        @Content(mediaType = "application/json")
+                    ]
+            ),
+            responses = [
+                    @ApiResponse(
+                            description = "Entity Info",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            array = @ArraySchema(schema = @Schema(oneOf = [Collection, Institution, DataProvider, DataResource, TempDataResource, DataHub]))
+                                    )
+                            ],
+                            headers = [
+                                    @Header(name = 'Access-Control-Allow-Headers', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Methods', description = "CORS header", schema = @Schema(type = "String")),
+                                    @Header(name = 'Access-Control-Allow-Origin', description = "CORS header", schema = @Schema(type = "String"))
+                            ]
+                    )
+            ],
+            security = []
+    )
+    @Path("/ws/find/{entity}")
+    @Produces("application/json")
+    def findEntities() {
+
+        def result = []
+
+        def authCheck = false
+        if (params.entity == 'dataResource') {
+            // this auth check (JWT or API key) is a special case handling to support backwards compatibility(which used to check for API key).
+            String requiredRoles = grailsApplication.config.ROLE_ADMIN
+            authCheck = collectoryAuthService.isAuthorisedWsRequest(getParams(), request, response, requiredRoles, null)
+        }
+
+        def clazz = capitalise(params.entity)
+
+        request.JSON.each {
+            def item
+            if (params.entity == 'tempDataResource') {
+                item = crudService.readTempDataResource(it)
+            } else {
+                def pg = providerGroupService._getEager(it)
+                if (pg) {
+                    if (params.entity == 'dataResource') {
+                        item = crudService."read${clazz}"(pg, authCheck)
+                    } else {
+                        item = crudService."read${clazz}"(pg)
+                    }
+                } else {
+                    log.debug("cannot find: " + it)
+                }
+            }
+            if (item) {
+                result.add(metadataService.convertAnyLocalPaths(item))
+            }
+        }
+
+        response.setContentType("application/json")
+        response.setCharacterEncoding("UTF-8")
+
+        render result as JSON
     }
 
     @Operation(
@@ -799,7 +939,7 @@ class DataController {
     @Produces("text/xml")
     def eml() {
         if (params.id) {
-            def pg = providerGroupService._get(params.id)
+            def pg = providerGroupService._getEager(params.id)
             if (pg) {
                 response.contentType = 'text/xml'
                 def xml = emlRenderService.emlForEntity(pg)
@@ -864,7 +1004,7 @@ class DataController {
             // just do hubs to start
             int validCount = 0
             def invalid = []
-            //DataHub.list().each {
+
             Collection.list().each {
                 def xml = emlRenderService.emlForEntity(it)
                 def error = ''
@@ -1070,7 +1210,6 @@ class DataController {
         }
         def props = params.json
         props.userLastModified = session.username
-        //println "body = "  + props
         if (params.id) {
             // update
             def c = Contact.get(params.id)
@@ -1290,12 +1429,11 @@ class DataController {
         if (!ok) {
             return
         }
-        //println "notify"
+
         if (request.method != 'POST') {
             log.error("not allowed")
             notAllowed()
         } else {
-            //println params.json
             def payload = params.json
             def uid = payload.uid
             def event = payload.event
@@ -1305,7 +1443,6 @@ class DataController {
                 log.error("bad request")
                 badRequest 'must specify a uid, an event and an event id'
             } else {
-                //println "OK"
                 // register the event
                 activityLogService.log([user: 'notify-service', isAdmin: false, action: "${action}d ${id}", entityUid: uid])
                 success "notification accepted"
@@ -1406,7 +1543,6 @@ class DataController {
         }
         def props = params.json
         props.userLastModified = session.username
-        //println "body = "  + props
         def c = Contact.get(params.id)
         def cf = ContactFor.findByContactAndEntityUid(c, params.pg.uid)
         if (cf) {

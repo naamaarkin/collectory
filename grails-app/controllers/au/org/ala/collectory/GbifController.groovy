@@ -31,6 +31,7 @@ class GbifController {
     def gbifService
     def authService
     def externalDataService
+    def dataLinkService
 
     def healthCheck() {
         gbifRegistryService.generateSyncBreakdown()
@@ -63,21 +64,15 @@ class GbifController {
                 dataResourcesWithData[dataResource] = result.count
 
                 //get the data provider if available...
-                def dataLinks = DataLink.findAllByProvider(uid)
-                def institutionDataLink
                 def linked = false
 
-                if(dataLinks){
-                    //do we have institution link ????
-                    institutionDataLink = dataLinks.find { it.consumer.startsWith("in")}
-                    if(institutionDataLink){
-                        //we have an institution
-                        linkedToInstitution[dataResource] = result.count
-                        linked = true
-                    }
+                if(dataResource.consumerInstitutions){
+                    //we have an institution
+                    linkedToInstitution[dataResource] = result.count
+                    linked = true
                 }
 
-                if(!institutionDataLink) {
+                if(!linked) {
                     def dataProvider = dataResource.getDataProvider()
                     if(!dataProvider){
                         isShareable = false //no institution and no data provider
