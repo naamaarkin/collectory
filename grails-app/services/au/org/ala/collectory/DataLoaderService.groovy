@@ -11,6 +11,7 @@ class DataLoaderService {
     def institutionCodeLoaderService
     def idGeneratorService
     javax.sql.DataSource dataSource
+    def grailsApplication
 
     boolean transactional = false
 
@@ -55,7 +56,7 @@ class DataLoaderService {
                 DataProvider dp = DataProvider.findByUid(params.uid)
                 if (!dp) {
                     // create it
-                    dp = new DataProvider()
+                    dp = new DataProvider(gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
                     updateProvider dp, params
                     if (!dp.hasErrors() && dp.save(flush: true)) {
                         inserts++
@@ -232,7 +233,7 @@ class DataLoaderService {
                 def originalId = it.id
                 log.info ">>processing ${it.name} original id = ${it.id}"
 
-                Institution ins = new Institution()
+                Institution ins = new Institution(gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
                 ins.name = it.name
                 ins.institutionType = load(it.institutionType)
                 ins.guid = load(it.guid)
@@ -713,7 +714,7 @@ class DataLoaderService {
                 // check whether it's really an institution
                 if (recogniseInstitution(params.name)) {
                     /* provider */
-                    provider = new Institution()
+                    provider = new Institution(gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
                     // load some values
                     provider.properties["guid","name","acronym","focus","notes","websiteUrl","longitude","latitude",
                             "altitude","techDescription","pubDescription"] = params
@@ -817,7 +818,7 @@ class DataLoaderService {
                                 institution.websiteUrl = params.institutionUri
                         } else {
                             log.info ">> Creating institution ${institutionName} for collection ${provider.name}"
-                            institution = new Institution(uid: idGeneratorService.getNextInstitutionId())
+                            institution = new Institution(uid: idGeneratorService.getNextInstitutionId(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
                             institution.name = institutionName
                             // fudge the institution guid for now
                             institution.guid = institutionGuid++

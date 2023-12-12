@@ -89,7 +89,7 @@ class DataProvider implements ProviderGroup, Serializable {
         gbifRegistryKey(nullable:true, maxSize:36)
         hiddenJSON(nullable:true, blank: false)
         keywords(nullable:true)
-        gbifCountryToAttribute(nullable:true, maxSize: 3)
+        gbifCountryToAttribute(nullable:false, maxSize: 3)
     }
 
     /**
