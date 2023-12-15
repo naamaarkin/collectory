@@ -147,8 +147,7 @@ class ProviderGroupService {
         def addr = pg.resolveAddress()
         if (!addr && (pg instanceof DataProvider || pg instanceof DataResource)) {
             (pg.consumerInstitutions + pg.consumerCollections).find {
-                def related = _get(it)
-                return related && related.resolveAddress()
+                return it && it.resolveAddress()
             }
         }
         return addr
