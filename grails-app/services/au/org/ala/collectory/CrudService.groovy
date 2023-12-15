@@ -149,7 +149,7 @@ class CrudService {
     }
 
     def insertDataProvider(obj) {
-        DataProvider dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId())
+        DataProvider dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
         updateBaseProperties(dp, obj)
         updateDataProviderProperties(dp, obj)
         dp.userLastModified = obj.user ?: 'Data services'
@@ -598,7 +598,7 @@ class CrudService {
     }
 
     def insertInstitution(obj) {
-        Institution inst = new Institution(uid: idGeneratorService.getNextInstitutionId())
+        Institution inst = new Institution(uid: idGeneratorService.getNextInstitutionId(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
         updateBaseProperties(inst, obj)
         updateInstitutionProperties(inst, obj)
         inst.userLastModified = obj.user ?: 'Data services'

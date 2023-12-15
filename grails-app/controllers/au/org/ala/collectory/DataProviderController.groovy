@@ -21,7 +21,6 @@ class DataProviderController extends ProviderGroupController {
         }
         params.max = Math.min(params.max ? params.int('max') : 10000, 10000)
         params.sort = params.sort ?: "name"
-        params.fetch = [resources: 'join']
         activityLogService.log username(), isAdmin(), Action.LIST
         [instanceList: DataProvider.list(params), entityType: 'DataProvider', instanceTotal: DataProvider.count()]
     }
@@ -97,7 +96,7 @@ class DataProviderController extends ProviderGroupController {
         def organizationKey = params.organizationKey
         log.info "Importing organization "+organizationKey+" as data provider"
 
-        DataProvider dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), userLastModified: collectoryAuthService?.username())
+        DataProvider dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
         gbifRegistryService.populateDataProviderFromOrganization(dp, organizationKey)
 
         if (!dp.hasErrors()) {
@@ -131,7 +130,7 @@ class DataProviderController extends ProviderGroupController {
         organizations.each { organization ->
             def dp = DataProvider.findByGbifRegistryKey(organization.key)
             if (!dp) {
-                dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), userLastModified: collectoryAuthService?.username())
+                dp = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry)
                 gbifRegistryService.populateDataProviderFromOrganization(dp, organization.key)
 
                 if (!dp.hasErrors()) {

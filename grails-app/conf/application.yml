@@ -112,6 +112,9 @@ uploadExternalUrlPath: http://localhost/upload
 gbifApiUrl: 'https://api.gbif.org/v1/'
 gbifUniqueKeyTerm: "http://rs.gbif.org/terms/1.0/gbifID"
 
+# country 3 digit ISO code. Non-empty value required at startup
+gbifDefaultEntityCountry:
+
 gbif:
     citations:
         lookup: "https://www.gbif.org/api/resource/search?contentType=literature&gbifDatasetKey="
@@ -404,6 +407,7 @@ environments:
             username: specieslist
             password: "specieslist"
             logSql: false
+        gbifDefaultEntityCountry: AUS
     test:
         grails:
             assets:
@@ -414,6 +418,7 @@ environments:
         dataSource:
             dbCreate: update
             url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        gbifDefaultEntityCountry: AUS
     production:
         grails:
             assets:

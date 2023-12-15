@@ -740,16 +740,18 @@ class GbifRegistryService {
         }
 
         // convert the 3 digit ISO code to the 2 digit ISO code GBIF needs
-        // Note: GBIF use this for counting "data published by Country X".  There are cases where the postal Address
+        // Note: GBIF use this for counting "data published by Country X". There are cases where the postal Address
         // indicates the headquarters of an international organisation and the country it is located should not be
-        // credited in GBIF as "owning the data".  For those cases, the country is left deliberately null.  This is a
-        // GBIF specific requirement.
+        // credited in GBIF as "owning the data". For International `ZZ` is required.
         organisation.country = null
         if (dp.gbifCountryToAttribute) {
             def iso2 = isoCodeService.iso3CountryCodeToIso2CountryCode(dp.gbifCountryToAttribute.toUpperCase())
             if (iso2) {
                 log.info("Setting GBIF country of attribution to ${iso2}")
                 organisation.country = iso2
+            } else if ("ZZZ".equalsIgnoreCase(dp.gbifCountryToAttribute)) {
+                log.info("Setting GBIF country of attribution to the value for international ${iso2}")
+                organisation.country = 'ZZ'
             }
         }
 

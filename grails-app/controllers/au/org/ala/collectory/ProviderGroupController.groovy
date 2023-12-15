@@ -152,9 +152,9 @@ abstract class ProviderGroupController {
                 }
                 break
             case Institution.ENTITY_TYPE:
-                pg = new Institution(uid: idGeneratorService.getNextInstitutionId(), name: name, userLastModified: collectoryAuthService?.username()); break
+                pg = new Institution(uid: idGeneratorService.getNextInstitutionId(), name: name, userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry); break
             case DataProvider.ENTITY_TYPE:
-                pg = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), name: name, userLastModified: collectoryAuthService?.username()); break
+                pg = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), name: name, userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry); break
             case DataResource.ENTITY_TYPE:
                 pg = new DataResource(uid: idGeneratorService.getNextDataResourceId(), name: name, userLastModified: collectoryAuthService?.username())
                 if (params.dataProviderUid && DataProvider.findByUid(params.dataProviderUid)) {

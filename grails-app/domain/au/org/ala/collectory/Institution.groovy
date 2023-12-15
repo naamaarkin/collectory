@@ -47,7 +47,7 @@ class Institution implements ProviderGroup, Serializable {
         institutionType(nullable:true, maxSize:45)
         collections(nullable:true)
         childInstitutions(nullable:true)
-        gbifCountryToAttribute(nullable:true, maxSize: 3)
+        gbifCountryToAttribute(nullable:false, maxSize: 3)
     }
 
     static transients = ['summary','mappable']
