@@ -445,5 +445,9 @@ liquibase.command.referencePassword: XXXXX
         <sqlFile path="5.1.0.2.sql" relativeToChangelogFile="true" encoding="ISO-8859-1" stripComments="1" />
     </changeSet>
 
+    <changeSet author="ALA Dev Team" id="20240115-00">
+        <sqlFile path="5.1.0.3.sql" relativeToChangelogFile="true" encoding="ISO-8859-1" stripComments="1" />
+    </changeSet>
+
 
 </databaseChangeLog>

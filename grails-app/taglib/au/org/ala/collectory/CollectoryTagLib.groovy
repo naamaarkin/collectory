@@ -1468,7 +1468,7 @@ class CollectoryTagLib {
             out << "</ul></p>\n"
         }
         def consumers = []
-        if (attrs.instance instanceof DataProvider || attrs.instance instanceof DataResource) {
+        if (attrs.instance instanceof DataResource) {
             consumers += attrs.instance.consumerInstitutions + attrs.instance.consumerCollections
             if (attrs.instance.dataProvider) {
                 consumers += attrs.instance.dataProvider.consumerInstitutions + attrs.instance.dataProvider.consumerCollections
