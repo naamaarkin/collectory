@@ -146,9 +146,9 @@ class LookupController {
             if (pg) {
                 if (pg.uid[0..1] == 'co') {
                     render collectionService.buildSummary(pg) as JSON
-                } else if (pg[0..1] == 'in') {
+                } else if (pg.uid[0..1] == 'in') {
                     render institutionService.buildSummary(pg) as JSON
-                } else if (pg[0..1] == 'dr') {
+                } else if (pg.uid[0..1] == 'dr') {
                     render dataResourceService.buildSummary(pg) as JSON
                 } else {
                     render pg.buildSummary() as JSON
@@ -164,9 +164,9 @@ class LookupController {
             domain.list().each {
                 if (it.uid[0..1] == 'co') {
                     list << collectionService.buildSummary(it)
-                } else if (pg[0..1] == 'in') {
+                } else if (it.uid[0..1] == 'in') {
                     list << institutionService.buildSummary(it)
-                } else if (pg[0..1] == 'dr') {
+                } else if (it.uid[0..1] == 'dr') {
                     list << dataResourceService.buildSummary(it)
                 } else {
                     list << it.buildSummary()
@@ -235,9 +235,9 @@ class LookupController {
         if (instance) {
             if (instance.uid[0..1] == 'co') {
                 render collectionService.buildSummary(instance) as JSON
-            } else if (pg[0..1] == 'in') {
+            } else if (instance.uid[0..1] == 'in') {
                 render institutionService.buildSummary(instance) as JSON
-            } else if (pg[0..1] == 'dr') {
+            } else if (instance.uid[0..1] == 'dr') {
                 render dataResourceService.buildSummary(instance) as JSON
             } else {
                 render instance.buildSummary() as JSON
