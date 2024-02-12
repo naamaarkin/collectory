@@ -104,11 +104,11 @@ class Institution implements ProviderGroup, Serializable {
      * @return List of Collection
      */
     def listCollections() {
-        List result = collections.collect {it}
+        List result = collections.collect { it }
         if (childInstitutions) {
             def list = childInstitutions.tokenize(' ')
-            Collections.createCriteria().list (fetch: [collections: 'join']) {
-                in ('id', list)
+            Institution.createCriteria().list(fetch: [collections: 'join']) {
+                in ('uid', list )
             }.each {
                 result.addAll it.listCollections()
             }
