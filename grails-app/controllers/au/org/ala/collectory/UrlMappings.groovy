@@ -60,6 +60,8 @@ class UrlMappings {
         // data sets
         "/datasets"(controller: 'public', action: 'dataSets')
 
+        "/ws/find/$entity(.$format)?"(controller: 'data', action: 'findEntities')
+
         // data services
         "/ws/$entity/count/$groupBy?"(controller: 'data', action: 'count') {
             constraints {
@@ -206,6 +208,8 @@ class UrlMappings {
 
         "/public/resources(.$format)"(controller: 'public', action: 'resources')
         "/public/condensed(.$format)"(controller: 'public', action: 'condensed')
+
+        "/sitemap($idx)?.xml"(controller: "sitemap", action: "index")
 
         "/"(controller: 'public', action: 'map')
 

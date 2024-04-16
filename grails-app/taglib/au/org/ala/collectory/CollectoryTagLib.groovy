@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 
 class CollectoryTagLib {
 
-    def collectoryAuthService, metadataService, providerGroupService
+    def collectoryAuthService, metadataService, providerGroupService, authService
 
     static namespace = 'cl'
 
@@ -196,7 +196,7 @@ class CollectoryTagLib {
      * @attrs uid - the uid of the entity
      */
     def isAuth = { attrs, body ->
-            if (isAuthorisedToEdit(attrs.uid, request.getRemoteUser())) {
+            if (isAuthorisedToEdit(attrs.uid, authService.email)) {
             out << body()
         } else {
             out << ' You are not authorised to change this record '// + debugString
@@ -686,7 +686,7 @@ class CollectoryTagLib {
         if (!email)
             email = body().toString()
         int index = email.indexOf('@')
-        //println "index=${index}"
+
         if (index > 0) {
             email = email.replaceAll("@", strEncodedAtSign)
         }
@@ -1084,8 +1084,6 @@ class CollectoryTagLib {
      * Draw elements for taxa breakdown chart
      */
     def taxonChart = { attrs ->
-        //println "taxonChart records link"
-        //println buildRecordsUrl(attrs.uid)
         out <<
                 "<div id='taxonRecordsLink' style='visibility:hidden;'>" +
                 " <span id='viewRecordsLink' class='taxonChartCaption'><a class='recordsLink' href='${buildRecordsUrl(attrs.uid)}'>View all records</a></span><br/>" +
@@ -1272,7 +1270,6 @@ class CollectoryTagLib {
      */
     def cleanString = { attrs ->
         def text = attrs.value
-        println text
         // detect json array of strings
         if (text && text.size() > 1 && text[0..1] == '["' && text[text.size()-2..text.size()-1] == '"]') {
             def list = JSON.parse(text.toString())
@@ -1449,45 +1446,45 @@ class CollectoryTagLib {
         out << "<img class='editImg' style='margin-right:5px;vertical-align:middle' src='${resource(dir:'images/ala',file:'edit.png')}'/>\n"
         out << link(controller:attrs.instance.urlForm(), action:'show', id:attrs.instance.uid) {"Edit metadata"}
         out << " for this ${attrs.instance.textFormOfEntityType(attrs.instance.uid)}. You need<br/>appropriate authorisation to do this. You will<br/>be asked to log in if you are not already.</p>\n"
-        def providers = attrs.instance.listProviders()
-        if (attrs.instance instanceof Collection && attrs.instance.institution) {
-            providers += attrs.instance.institution?.listProviders()
+        def providers = []
+        if (attrs.instance instanceof Collection) {
+            providers = attrs.instance.providerDataProviders + attrs.instance.providerDataResources
+            if (attrs.instance.institution) {
+                providers += attrs.instance.institution.providerDataProviders + attrs.instance.institution.providerDataResources
+            }
         }
         if (providers) {
             boolean first = true
-            providers.each {
+            providers.each { provider ->
                 // only write the header if we have at least one resource
                 if (first) {
                     out << "<p class='viewList' style='margin-top:5px;'>View data sources<br/><ul>\n"
                     first = false
                 }
-                def provider = providerGroupService._get(it)
-                if (provider) {
-                    out << "<li>" +
-                            link(action:'show',id:provider.uid) {provider.name} +
-                            "</li>\n"
-                }
+                out << "<li>" +
+                        link(action:'show',id:provider.uid) {provider.name} +
+                        "</li>\n"
             }
             out << "</ul></p>\n"
         }
-        def consumers = attrs.instance.listConsumers()
-        if (attrs.instance instanceof DataResource && attrs.instance.dataProvider) {
-            consumers += attrs.instance.dataProvider?.listConsumers()
+        def consumers = []
+        if (attrs.instance instanceof DataResource) {
+            consumers += attrs.instance.consumerInstitutions + attrs.instance.consumerCollections
+            if (attrs.instance.dataProvider) {
+                consumers += attrs.instance.dataProvider.consumerInstitutions + attrs.instance.dataProvider.consumerCollections
+            }
         }
         if (consumers) {
             boolean first = true
-            consumers.each {
+            consumers.each { consumer ->
                 // only write the header if we have at least one resource
                 if (first) {
                     out << "<p class='viewList' style='margin-top:5px;'>View data consumers<br/><ul>\n"
                     first = false
                 }
-                def consumer = providerGroupService._get(it)
-                if (consumer) {
-                    out << "<li>" +
-                            link(action:'show',id:consumer.uid) {consumer.name} +
-                            "</li>\n"
-                }
+                out << "<li>" +
+                        link(action:'show',id:consumer.uid) {consumer.name} +
+                        "</li>\n"
             }
             out << "</ul></p>\n"
         }
@@ -1536,7 +1533,7 @@ class CollectoryTagLib {
      * @body the label for the button - defaults to 'Edit' if not specified
      */
     def editButton = { attrs, body ->
-        if (isAuthorisedToEdit(attrs.uid, request.getRemoteUser())) {
+        if (isAuthorisedToEdit(attrs.uid, authService.email)) {
             def paramsMap
             // anchor class
             paramsMap = [class:'edit btn btn-default']
@@ -1560,7 +1557,6 @@ class CollectoryTagLib {
 
     def showRecordsExceptions = {attrs ->
         def exceptions = attrs.exceptions
-        println exceptions
         if (exceptions) {
             out << '<div class="child-institutions">'
             switch (exceptions.listType) {
@@ -1833,6 +1829,9 @@ class CollectoryTagLib {
                         onchange:'changeProtocol()')
         out << "</div>"
 
+        // map each parameter only once
+        var mappedParams = [:]
+
         // create the widgets for each protocol (profile)
         metadataService.getConnectionProfilesAsList().each {
             // is this the selected protocol?
@@ -1842,61 +1841,71 @@ class CollectoryTagLib {
             it.params.each { ppName ->
 
                 def pp = metadataService.getConnectionParameter(ppName)
+                if (mappedParams[pp.paramName] != null) {
+                    mappedParams[pp.paramName].add(it.name)
+                } else {
+                    mappedParams[pp.paramName] = [it.name]
 
-                // get value from object
-                def displayedValue = cp?."${pp.paramName}"?:""
+                    // get value from object
+                    def displayedValue = cp?."${pp.paramName}" ?: ""
 
-                // inject default if no value
-                if (!displayedValue && pp.defaultValue) {
-                    displayedValue = pp.defaultValue
-                }
-
-                // unravel any JSON lists
-                if (displayedValue instanceof JSONArray) {
-                    displayedValue = displayedValue.collect {it}.join(', ') as String
-                }
-
-                // handle unprintable chars
-                if (pp.type == 'delimiter') {
-                    displayedValue = encodeControlChars(displayedValue)
-                }
-
-                def attributes = [name:pp.paramName, value:displayedValue, class:'form-control']
-                if (!selected) {
-                    attributes << [disabled:true]
-                }
-                if (pp.paramName == "termsForUniqueKey") {
-                    // handle terms specially
-                    out << """<div class="form-group labile" id="${it.name}" style="${hidden}">"""
-                    out << """<div class='alert alert-danger'>Don't change the following terms unless you know what you are doing. Incorrect values can cause major devastation.</div>"""
-                    out << "</div>"
-                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
-                    out << """<label for="termsForUniqueKey">${pp.display}${helpText(code:'dataResource.termsForUniqueKey')}</label>"""
-                    out << textField(attributes)
-                    out << "</div>"
-                 } else if (pp.type == 'boolean') {
-                    attributes.remove('class')
-                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
-                    out << """<label for="${pp.paramName}">"""
-                    out << checkBox(attributes)
-                    out << " "
-                    out << pp.display
-                    out << helpText(code:'dataResource.' + pp.paramName)
-                    out << "</label></div>"
-                 } else {
-                    // all others
-                    def widget
-                    switch (pp.type) {
-                        case 'textArea': widget = 'textArea'; break
-                        default: widget = 'textField'; break
+                    // inject default if no value
+                    if (!displayedValue && pp.defaultValue) {
+                        displayedValue = pp.defaultValue
                     }
-                    out << """<div class="form-group labile" style="${hidden}" id="${it.name}">"""
-                    out << """<label for="${pp.paramName}">${pp.display}${helpText(code:'dataResource.' + pp.paramName)}</label>"""
-                    out << "${widget}"(attributes)
-                    out << "</div>"
+
+                    // unravel any JSON lists
+                    if (displayedValue instanceof JSONArray) {
+                        displayedValue = displayedValue.collect { it }.join(', ') as String
+                    }
+
+                    // handle unprintable chars
+                    if (pp.type == 'delimiter') {
+                        displayedValue = encodeControlChars(displayedValue)
+                    }
+
+                    def attributes = [name: pp.paramName, value: displayedValue, class: 'form-control']
+                    if (!selected) {
+                        attributes << [disabled: true]
+                    }
+                    if (pp.paramName == "termsForUniqueKey") {
+                        // handle terms specially
+                        out << """<div class="form-group labile" id="connection_termsForUniqueKey" style="${hidden}">"""
+                        out << """<div class='alert alert-danger'>Don't change the following terms unless you know what you are doing. Incorrect values can cause major devastation.</div>"""
+                        out << "</div>"
+                        out << """<div class="form-group labile" style="${hidden}" id="connection_termsForUniqueKey">"""
+                        out << """<label for="termsForUniqueKey">${pp.display}${helpText(code: 'dataResource.termsForUniqueKey')}</label>"""
+                        out << textField(attributes)
+                        out << "</div>"
+                    } else if (pp.type == 'boolean') {
+                        attributes.remove('class')
+                        out << """<div class="form-group labile" style="${hidden}" id="connection_${pp.paramName}">"""
+                        out << """<label for="${pp.paramName}">"""
+                        out << checkBox(attributes)
+                        out << " "
+                        out << pp.display
+                        out << helpText(code: 'dataResource.' + pp.paramName)
+                        out << "</label></div>"
+                    } else {
+                        // all others
+                        def widget
+                        switch (pp.type) {
+                            case 'textArea': widget = 'textArea'; break
+                            default: widget = 'textField'; break
+                        }
+                        out << """<div class="form-group labile" style="${hidden}" id="connection_${pp.paramName}">"""
+                        out << """<label for="${pp.paramName}">${pp.display}${helpText(code: 'dataResource.' + pp.paramName)}</label>"""
+                        out << "${widget}"(attributes)
+                        out << "</div>"
+                    }
                 }
             }
         }
+
+        out << "<script>"
+        out << "var connectionParameters = JSON.parse('" + (mappedParams as JSON).toString().replace("\'", "\'\'") + "');"
+        out << "changeProtocol()"
+        out << "</script>"
 
     }
 
@@ -2064,7 +2073,6 @@ class CollectoryTagLib {
 
     def toJson = { attrs ->
         def json = attrs.obj as JSON
-        println json
         out << json.toString()
     }
 

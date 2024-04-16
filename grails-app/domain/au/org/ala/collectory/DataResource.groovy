@@ -49,6 +49,9 @@ class DataResource implements ProviderGroup, Serializable {
         dataCollectionProtocolDoc type: "text"
         suitableFor type: "text"
         suitableForOtherDetail type: "text"
+
+        consumerInstitutions joinTable:[name:"data_resource_institution", key:'data_resource_id' ]
+        consumerCollections joinTable:[name:"data_resource_collection", key:'data_resource_id' ]
     }
 
     String rights
@@ -100,6 +103,8 @@ class DataResource implements ProviderGroup, Serializable {
     String qualityControlDescription
 
     String gbifDoi
+
+    static hasMany = [externalIdentifiers: ExternalIdentifier, consumerInstitutions: Institution, consumerCollections: Collection]
 
     String createdByID
 
@@ -179,44 +184,6 @@ class DataResource implements ProviderGroup, Serializable {
         return false;
     }
 
-    /**
-     * Returns a summary of the data provider including:
-     * - id
-     * - name
-     * - acronym
-     * - lsid if available
-     * - description
-     * - data provider name, id and uid
-     *
-     * @return CollectionSummary
-     */
-    DataResourceSummary buildSummary() {
-        DataResourceSummary drs = init(new DataResourceSummary()) as DataResourceSummary
-        drs.dataProvider = dataProvider?.name
-        drs.dataProviderId = dataProvider?.id
-        drs.dataProviderUid = dataProvider?.uid
-        drs.downloadLimit = downloadLimit
-
-        drs.hubMembership = listHubMembership().collect { [uid: it.uid, name: it.name] }
-        def consumers = listConsumers()
-        consumers.each {
-            def pg = DataResource.findByUid(it)
-            if (pg) {
-                if (it[0..1] == 'co') {
-                    drs.relatedCollections << [uid: pg.uid, name: pg.name]
-                } else {
-                    drs.relatedInstitutions << [uid: pg.uid, name: pg.name]
-                }
-            }
-        }
-        // for backward compatibility
-        if (drs.relatedInstitutions) {
-            drs.institution = drs.relatedInstitutions[0].name
-            drs.institutionUid = drs.relatedInstitutions[0].uid
-        }
-        return drs
-    }
-
     Boolean isVerified(){
 
         if(defaultDarwinCoreValues){
@@ -269,15 +236,6 @@ class DataResource implements ProviderGroup, Serializable {
     }
 
     /**
-     * Returns a list of all hubs this resource belongs to.
-     *
-     * @return list of DataHub
-     */
-    List listHubMembership() {
-        DataHub.list().findAll {it.isDataResourceMember(uid)}
-    }
-
-    /**
      * True if this resource uses a CC license.
      * @return
      */
@@ -290,7 +248,7 @@ class DataResource implements ProviderGroup, Serializable {
      * @return
      */
     boolean hasMappedCollections() {
-        return listConsumers().size() as boolean
+        return consumerInstitutions || consumerCollections
     }
 
     /**

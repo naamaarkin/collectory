@@ -1,6 +1,6 @@
 package au.org.ala.collectory
 
-
+import au.org.ala.collectory.resources.PP
 import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.web.context.request.RequestContextHolder
@@ -20,6 +20,7 @@ abstract class ProviderGroupController {
     int TRUNCATE_LENGTH = 255
 
     def idGeneratorService, collectoryAuthService, metadataService, gbifService, dataImportService, providerGroupService, activityLogService
+    def externalIdentifierService
 
     /*
      * Access control
@@ -44,7 +45,14 @@ abstract class ProviderGroupController {
      * List providers for institutions/collections
      */
     def showProviders = {
-        def provs = DataLink.findAllByConsumer(params.id).collect {it.provider}
+        def provs = []
+        if (params.id[0..1] == 'co') {
+            Collection c = Collection.findByUid(params.uid)
+            provs = c.providerDataProviders.collect { it.uid } + c.providerDataResources.collect { it.uid }
+        } else {
+            Institution c = Institution.findByUid(params.uid)
+            provs = c.providerDataProviders.collect { it.uid } + c.providerDataResources.collect { it.uid }
+        }
         render provs as JSON
     }
 
@@ -52,7 +60,14 @@ abstract class ProviderGroupController {
      * List consumers of data resources/providers
      */
     def showConsumers = {
-        def cons = DataLink.findAllByProvider(params.id).collect {it.consumer}
+        def cons = []
+        if (params.id[0..1] == 'dr') {
+            DataResource c = DataResource.findByUid(params.uid)
+            cons = c.consumerCollections.collect { it.uid } + c.consumerInstitutions.collect { it.uid }
+        } else {
+            DataProvider c = DataProvider.findByUid(params.uid)
+            cons = c.consumerCollections.collect { it.uid } + c.consumerInstitutions.collect { it.uid }
+        }
         render cons as JSON
     }
 
@@ -66,11 +81,9 @@ abstract class ProviderGroupController {
         if (params.version) {
             def version = params.version.toLong()
             if (pg.version > version) {
-                println "db version = ${pg.version} submitted version = ${version}"
                 pg.errors.rejectValue("version", "default.optimistic.locking.failure",
                         [message(code: "${pg.urlForm()}.label", default: pg.entityType())] as Object[],
                         message(code: "provider.group.controller.02", default: "Another user has updated this") + " ${pg.entityType()} " + message(code: "provider.group.controller.03", default: "while you were editing. This page has been refreshed with the current values."))
-                println "error added - rendering ${view}"
                 response.setHeader("Content-type", "text/plain; charset=UTF-8")
                 render(view: view, model: [command: pg])
             }
@@ -139,9 +152,9 @@ abstract class ProviderGroupController {
                 }
                 break
             case Institution.ENTITY_TYPE:
-                pg = new Institution(uid: idGeneratorService.getNextInstitutionId(), name: name, userLastModified: collectoryAuthService?.username()); break
+                pg = new Institution(uid: idGeneratorService.getNextInstitutionId(), name: name, userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry); break
             case DataProvider.ENTITY_TYPE:
-                pg = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), name: name, userLastModified: collectoryAuthService?.username()); break
+                pg = new DataProvider(uid: idGeneratorService.getNextDataProviderId(), name: name, userLastModified: collectoryAuthService?.username(), gbifCountryToAttribute: grailsApplication.config.gbifDefaultEntityCountry); break
             case DataResource.ENTITY_TYPE:
                 pg = new DataResource(uid: idGeneratorService.getNextDataResourceId(), name: name, userLastModified: collectoryAuthService?.username())
                 if (params.dataProviderUid && DataProvider.findByUid(params.dataProviderUid)) {
@@ -192,7 +205,6 @@ abstract class ProviderGroupController {
             if (c.hasErrors()) {
                 c.errors.each {
                     log.debug("Error saving new contact for ${user} - ${it}")
-                    println "Error saving new contact for ${user} - ${it}"
                 }
             }
         }
@@ -200,7 +212,6 @@ abstract class ProviderGroupController {
     }
 
     def cancel = {
-        //println "Cancel - returnTo = ${params.returnTo}"
         if (params.returnTo) {
             redirect(uri: params.returnTo)
         } else {
@@ -381,7 +392,6 @@ abstract class ProviderGroupController {
             def th = pg.taxonomyHints ? JSON.parse(pg.taxonomyHints) : [:]
             th.range = rangeList
             pg.taxonomyHints = th as JSON
-            println pg.taxonomyHints
 
             pg.userLastModified = collectoryAuthService?.username()
             if (!pg.hasErrors()) {
@@ -412,28 +422,30 @@ abstract class ProviderGroupController {
             def sources = params.findAll { key, value ->
                 key.startsWith('source_') && value
             }
-            def external = sources.sort().collect { key, value ->
+
+            // remove existing external identifiers
+            if (pg.externalIdentifiers) {
+                def existing = pg.externalIdentifiers
+                pg.externalIdentifiers = []
+
+                DataResource.withTransaction {
+                    pg.save(flush: true)
+                }
+
+                existing.each { ext -> DataResource.withTransaction { ext.delete(flush: true) } }
+            }
+
+            // add new external identifiers
+            sources.sort().collect { key, value ->
                 def idx = key.substring(7)
                 def source = params[key]
                 def identifier = params."identifier_${idx}"
                 def uri = params."uri_${idx}"
                 if (!uri)
                     uri = null
-                return new ExternalIdentifier(entityUid: pg.uid, source: source, identifier: identifier, uri: uri)
+                externalIdentifierService.addExternalIdentifier(pg.uid, identifier, source, uri)
             }
-            def existing = pg.externalIdentifiers
-            external.each { ext ->
-                def old = existing.find { prev -> prev.same(ext) }
-                if (!old) {
-                    DataResource.withTransaction { ext.save(flush: true) }
-                } else {
-                    old.uri = ext.uri
-                    DataResource.withTransaction { old.save(flush: true) }
-                    existing.remove(old)
-                }
-            }
-            // Delete non-matching, existing external IDs
-            existing.each { ext -> DataResource.withTransaction { ext.delete(flush: true) } }
+
             pg.userLastModified = collectoryAuthService?.username()
             if (!pg.hasErrors()) {
                 DataResource.withTransaction {
@@ -598,10 +610,46 @@ abstract class ProviderGroupController {
         } else {
             // are they allowed to edit
             if (isAuthorisedToEdit(pg.uid)) {
+                def connectionParams = metadataService.getConnectionParameters()
+                // set the default value for 'darwin core terms that uniquely identify a record'
+                try {
+                    JSON.parse(pg.connectionParameters).each { k, v ->
+
+                        var item = connectionParams.find { ck, cv -> cv.paramName == k }
+
+                        if (item?.value) {
+                            var defaultValue = v
+                            if (item.value.paramName == 'termsForUniqueKey') {
+                                defaultValue = v.join(',').replaceAll('"',"")
+                            } else if (item.value.type == 'delimiter') {
+                                def str = v
+                                str = str.replaceAll('HT', PP.HT_CHAR)
+                                str = str.replaceAll('LF', PP.LF_CHAR)
+                                str = str.replaceAll('VT', PP.VT_CHAR)
+                                str = str.replaceAll('FF', PP.FF_CHAR)
+                                str = str.replaceAll('CR', PP.CR_CHAR)
+                                defaultValue = str
+                            } else if (item.value.paramName == 'url') {
+                                if (v instanceof List) {
+                                    def normalised = []
+                                    v.each {
+                                        if (it.trim().length() > 0) {
+                                            normalised << it.trim()
+                                        }
+                                    }
+                                    defaultValue = normalised.join(',').replaceAll('"',"")
+                                }
+                            }
+
+                            item.value.putAt('defaultValue', defaultValue)
+                        }
+                    }
+                } catch (ignored) {
+                }
                 render(view:'upload', model:[
                         instance: pg,
                         connectionProfiles: metadataService.getConnectionProfilesWithFileUpload(),
-                        connectionParams: metadataService.getConnectionParameters()
+                        connectionParams: connectionParams
                 ])
             } else {
                 response.setHeader("Content-type", "text/plain; charset=UTF-8")
@@ -672,7 +720,6 @@ abstract class ProviderGroupController {
                     file.transferTo(f)
                     activityLogService.log collectoryAuthService?.username(), collectoryAuthService?.userInRole(grailsApplication.config.ROLE_ADMIN), Action.UPLOAD_IMAGE, filename
                 } else {
-                    println "reject file of size ${file.size}"
                     pg.errors.rejectValue('imageRef', 'image.too.big', message(code: "provider.group.controller.13", default: "The image you selected is too large. Images are limited to 200KB."))
                     render(view: "/shared/images", model: [command: pg, target: target])
                     return
@@ -870,7 +917,7 @@ abstract class ProviderGroupController {
         if (isAdmin()) {
             return true
         } else {
-            def email = RequestContextHolder.currentRequestAttributes()?.getUserPrincipal()?.name
+            def email = collectoryAuthService.authService.email
             ProviderGroup pg = providerGroupService?._get(uid)
             if (email && pg) {
                 if(pg){
