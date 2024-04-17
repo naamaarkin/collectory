@@ -4,7 +4,7 @@ version: '3.8'
 services:
   collectory:
     container_name: living-atlas-collectory
-    image: livingatlases/collectory:latest
+    image: atlasoflivingaustralia/collectory:latest
     pull_policy: if_not_present
     restart: always
 
