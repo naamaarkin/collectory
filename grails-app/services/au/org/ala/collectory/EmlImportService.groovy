@@ -187,6 +187,8 @@ class EmlImportService {
 
         if (!contact && (hasEmail || hasName)) {
             contact = new Contact()
+        } else {
+            return null
         }
 
         // Update the contact details
